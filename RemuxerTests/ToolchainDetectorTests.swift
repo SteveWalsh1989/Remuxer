@@ -36,6 +36,28 @@ final class ToolchainDetectorTests: XCTestCase {
     )
   }
 
+  func testSearchesBundledRuntimeBeforeConfiguredAndDefaultDirectories() throws {
+    let bundledFolderURL = try makeExecutableToolDirectory()
+    let configuredFolderURL = try makeExecutableToolDirectory()
+    let fallbackFolderURL = try makeExecutableToolDirectory()
+    let configurationStore = FakeToolchainConfigurationStore(
+      configuredDirectoryURL: configuredFolderURL)
+
+    let locator = ProcessToolLocator(
+      searchDirectories: [fallbackFolderURL],
+      bundledSearchDirectories: [bundledFolderURL],
+      configurationStore: configurationStore
+    )
+
+    XCTAssertEqual(
+      try locator.locateToolchain(),
+      FFmpegToolchain(
+        ffmpegURL: bundledFolderURL.appendingPathComponent("ffmpeg"),
+        ffprobeURL: bundledFolderURL.appendingPathComponent("ffprobe")
+      )
+    )
+  }
+
   func testSearchesConfiguredDirectoryBeforeDefaultDirectories() throws {
     let configuredFolderURL = try makeExecutableToolDirectory()
     let fallbackFolderURL = try makeExecutableToolDirectory()
@@ -44,6 +66,7 @@ final class ToolchainDetectorTests: XCTestCase {
 
     let locator = ProcessToolLocator(
       searchDirectories: [fallbackFolderURL],
+      bundledSearchDirectories: [],
       configurationStore: configurationStore
     )
 

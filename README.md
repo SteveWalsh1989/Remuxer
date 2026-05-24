@@ -6,13 +6,13 @@ The main product rule is honesty: the app should never silently re-encode video 
 
 ## Current Status
 
-Remuxer currently has a SwiftUI queue interface, conversion planning, output path handling, FFmpeg/ffprobe process wrappers, and unit tests for the core non-UI behavior. The first version expects externally installed FFmpeg tools rather than bundling them.
+Remuxer currently has a SwiftUI queue interface, conversion planning, output path handling, FFmpeg/ffprobe process wrappers, app-bundle runtime discovery, and unit tests for the core non-UI behavior. Release builds should include Remuxer's FFmpeg runtime in the app bundle.
 
 ## Prerequisites
 
 - macOS 14 or newer.
 - Xcode installed at `/Applications/Xcode.app`.
-- `ffmpeg` and `ffprobe` available from Homebrew paths such as `/opt/homebrew/bin` or `/usr/local/bin`.
+- `ffmpeg` and `ffprobe` in the bundled runtime folder at `Remuxer/Resources/FFmpeg/bin` before packaging a distributable app.
 - SwiftLint installed locally for lint checks.
 
 ## Common Commands

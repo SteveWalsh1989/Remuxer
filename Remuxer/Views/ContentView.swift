@@ -119,12 +119,8 @@ extension ContentView {
         Text("No custom folder configured")
       }
 
-      Button("Choose FFmpeg Folder...") {
+      Button("Choose Runtime Folder...") {
         presentToolchainFolderPicker()
-      }
-
-      Button("Copy Homebrew Install Command") {
-        copyHomebrewInstallCommand()
       }
 
       Button("Clear Configured Folder") {
@@ -211,8 +207,7 @@ extension ContentView {
         outputName: selectedOutputNameBinding,
         resetOutputName: resetSelectedOutputName,
         toolchainErrorMessage: queue.toolchainErrorMessage,
-        chooseToolchainFolder: presentToolchainFolderPicker,
-        copyHomebrewInstallCommand: copyHomebrewInstallCommand
+        chooseToolchainFolder: presentToolchainFolderPicker
       )
     }
   }
@@ -301,7 +296,7 @@ extension ContentView {
   @MainActor
   private func presentToolchainFolderPicker() {
     let panel = NSOpenPanel()
-    panel.title = "Choose FFmpeg Folder"
+    panel.title = "Choose FFmpeg Runtime Folder"
     panel.message = "Choose the folder that contains both ffmpeg and ffprobe."
     panel.prompt = "Choose"
     panel.allowsMultipleSelection = false
@@ -351,9 +346,12 @@ extension ContentView {
   }
 
   private var defaultToolchainDirectoryURL: URL? {
-    ProcessToolLocator.defaultSearchDirectories.first {
+    ProcessToolLocator.defaultBundledSearchDirectories.first {
       FileManager.default.directoryExists(at: $0)
     }
+      ?? ProcessToolLocator.defaultSearchDirectories.first {
+        FileManager.default.directoryExists(at: $0)
+      }
   }
 
   private func rememberSourceFolder(from urls: [URL]) {
@@ -362,11 +360,6 @@ extension ContentView {
     }
 
     lastSourceFolderPath = sourceFolderURL.path
-  }
-
-  private func copyHomebrewInstallCommand() {
-    NSPasteboard.general.clearContents()
-    NSPasteboard.general.setString("brew install ffmpeg", forType: .string)
   }
 
   private func openDroppedFiles(_ providers: [NSItemProvider]) -> Bool {

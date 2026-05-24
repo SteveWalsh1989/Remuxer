@@ -55,35 +55,44 @@ enum ToolchainError: LocalizedError, Equatable {
     switch self {
     case .missingFFmpeg:
       [
-        "FFmpeg was not found.",
-        "Install it with Homebrew using `brew install ffmpeg`,",
-        "or choose the folder that contains ffmpeg and ffprobe.",
+        "Remuxer's FFmpeg runtime is missing ffmpeg.",
+        "This build needs ffmpeg and ffprobe in the app bundle runtime folder,",
+        "or a configured runtime folder for development.",
       ].joined(separator: " ")
     case .missingFFprobe:
       [
-        "ffprobe was not found.",
-        "Install FFmpeg with Homebrew using `brew install ffmpeg`,",
-        "or choose the folder that contains ffmpeg and ffprobe.",
+        "Remuxer's FFmpeg runtime is missing ffprobe.",
+        "This build needs ffmpeg and ffprobe in the app bundle runtime folder,",
+        "or a configured runtime folder for development.",
       ].joined(separator: " ")
     }
   }
 }
 
 struct ProcessToolLocator: ToolchainManaging {
-  static let defaultSearchDirectories: [URL] = [
-    URL(fileURLWithPath: "/opt/homebrew/bin"),
-    URL(fileURLWithPath: "/usr/local/bin"),
-    URL(fileURLWithPath: "/usr/bin"),
-  ]
+  static let defaultSearchDirectories: [URL] = []
+
+  static var defaultBundledSearchDirectories: [URL] {
+    guard let resourceURL = Bundle.main.resourceURL else {
+      return []
+    }
+
+    return [
+      resourceURL.appendingPathComponent("FFmpeg/bin")
+    ]
+  }
 
   var searchDirectories: [URL]
+  var bundledSearchDirectories: [URL]
   private let configurationStore: ToolchainConfigurationPersisting
 
   init(
     searchDirectories: [URL] = Self.defaultSearchDirectories,
+    bundledSearchDirectories: [URL] = Self.defaultBundledSearchDirectories,
     configurationStore: ToolchainConfigurationPersisting = UserDefaultsToolchainConfigurationStore()
   ) {
     self.searchDirectories = searchDirectories
+    self.bundledSearchDirectories = bundledSearchDirectories
     self.configurationStore = configurationStore
   }
 
@@ -114,12 +123,13 @@ struct ProcessToolLocator: ToolchainManaging {
   }
 
   private var effectiveSearchDirectories: [URL] {
-    var directories = searchDirectories
+    var directories = bundledSearchDirectories
 
     if let configuredDirectoryURL {
-      directories.insert(configuredDirectoryURL, at: 0)
+      directories.append(configuredDirectoryURL)
     }
 
+    directories.append(contentsOf: searchDirectories)
     return directories.uniquedByStandardizedFileURL()
   }
 }

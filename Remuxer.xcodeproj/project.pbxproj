@@ -29,6 +29,7 @@
 		BF0000000000000000000021 /* DestinationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000021 /* DestinationStore.swift */; };
 		BF0000000000000000000022 /* OutputPreparer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000022 /* OutputPreparer.swift */; };
 		BF0000000000000000000023 /* SecurityScopedResourceAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000023 /* SecurityScopedResourceAccess.swift */; };
+		BR0000000000000000000001 /* FFmpeg in Resources */ = {isa = PBXBuildFile; fileRef = R00000000000000000000001 /* FFmpeg */; };
 		BT0000000000000000000001 /* CompatibilityRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000001 /* CompatibilityRulesTests.swift */; };
 		BT0000000000000000000002 /* ConversionPlannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000002 /* ConversionPlannerTests.swift */; };
 		BT0000000000000000000003 /* ConversionQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000003 /* ConversionQueueTests.swift */; };
@@ -52,6 +53,7 @@
 		PROD00000000000000000001 /* Remuxer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Remuxer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		PROD00000000000000000002 /* RemuxerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RemuxerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ENT000000000000000000001 /* Remuxer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Remuxer.entitlements; sourceTree = "<group>"; };
+		R00000000000000000000001 /* FFmpeg */ = {isa = PBXFileReference; lastKnownFileType = folder; path = FFmpeg; sourceTree = "<group>"; };
 		F00000000000000000000001 /* RemuxerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemuxerApp.swift; sourceTree = "<group>"; };
 		F00000000000000000000002 /* ConversionPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionPlan.swift; sourceTree = "<group>"; };
 		F00000000000000000000003 /* ConversionPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionPreset.swift; sourceTree = "<group>"; };
@@ -122,6 +124,7 @@
 				GRP000000000000000000009 /* Support */,
 				GRP000000000000000000010 /* Views */,
 				GRP000000000000000000011 /* ViewModels */,
+				GRP000000000000000000014 /* Resources */,
 				ENT000000000000000000001 /* Remuxer.entitlements */,
 			);
 			path = Remuxer;
@@ -235,6 +238,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		GRP000000000000000000014 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				R00000000000000000000001 /* FFmpeg */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -316,6 +327,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BR0000000000000000000001 /* FFmpeg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

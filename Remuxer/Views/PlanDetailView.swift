@@ -7,7 +7,6 @@ struct PlanDetailView: View {
   let resetOutputName: () -> Void
   let toolchainErrorMessage: String?
   let chooseToolchainFolder: () -> Void
-  let copyHomebrewInstallCommand: () -> Void
 
   init(
     item: QueueItem?,
@@ -15,8 +14,7 @@ struct PlanDetailView: View {
     outputName: Binding<String>? = nil,
     resetOutputName: @escaping () -> Void = {},
     toolchainErrorMessage: String? = nil,
-    chooseToolchainFolder: @escaping () -> Void = {},
-    copyHomebrewInstallCommand: @escaping () -> Void = {}
+    chooseToolchainFolder: @escaping () -> Void = {}
   ) {
     self.item = item
     self.presetSelection = presetSelection
@@ -24,7 +22,6 @@ struct PlanDetailView: View {
     self.resetOutputName = resetOutputName
     self.toolchainErrorMessage = toolchainErrorMessage
     self.chooseToolchainFolder = chooseToolchainFolder
-    self.copyHomebrewInstallCommand = copyHomebrewInstallCommand
   }
 
   var body: some View {
@@ -93,12 +90,8 @@ struct PlanDetailView: View {
         .fixedSize(horizontal: false, vertical: true)
 
       HStack(spacing: 8) {
-        Button("Choose FFmpeg Folder...") {
+        Button("Choose Runtime Folder...") {
           chooseToolchainFolder()
-        }
-
-        Button("Copy Homebrew Install Command") {
-          copyHomebrewInstallCommand()
         }
       }
     }
