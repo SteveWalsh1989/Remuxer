@@ -5,13 +5,15 @@ import XCTest
 @MainActor
 final class ConversionQueueTests: XCTestCase {
   func testAnalyzeTransitionsQueuedItemToReady() async {
-    let queue = makeQueue()
+    let resourceAccess = FakeResourceAccess()
+    let queue = makeQueue(resourceAccess: resourceAccess)
 
     queue.addFiles([URL(fileURLWithPath: "/Movies/Movie.mkv")])
     await queue.analyzeItems()
 
     XCTAssertEqual(queue.items.first?.status, .ready)
     XCTAssertNotNil(queue.items.first?.plan)
+    XCTAssertEqual(resourceAccess.accessedURLs.first, [URL(fileURLWithPath: "/Movies/Movie.mkv")])
   }
 
   func testAnalyzeMarksItemFailedWhenToolchainIsMissing() async {
@@ -28,13 +30,26 @@ final class ConversionQueueTests: XCTestCase {
   func testConversionRunsSubtitleAndPrimaryCommands() async {
     let executor = FakeExecutor()
     let outputPreparer = FakeOutputPreparer()
-    let queue = makeQueue(executor: executor, outputPreparer: outputPreparer)
+    let resourceAccess = FakeResourceAccess()
+    let queue = makeQueue(
+      executor: executor,
+      outputPreparer: outputPreparer,
+      resourceAccess: resourceAccess
+    )
 
     queue.addFiles([URL(fileURLWithPath: "/Movies/Movie.mkv")])
     await queue.startConversion()
 
     XCTAssertEqual(queue.items.first?.status, .completed)
     XCTAssertEqual(outputPreparer.outputs.first?.videoURL.lastPathComponent, "Movie.mp4")
+    let accessedPathSets = resourceAccess.accessedURLs.map {
+      Set($0.map(\.standardizedFileURL.path))
+    }
+    XCTAssertTrue(
+      accessedPathSets.contains { paths in
+        paths.contains("/Movies/Movie.mkv") && paths.contains("/Movies")
+      }
+    )
     XCTAssertEqual(executor.commands.count, 2)
   }
 
@@ -80,7 +95,8 @@ final class ConversionQueueTests: XCTestCase {
     executor: FakeExecutor? = nil,
     toolLocator: FakeToolLocator = FakeToolLocator(),
     destinationStore: DestinationPersisting = FakeDestinationStore(),
-    outputPreparer: OutputPreparing = FakeOutputPreparer()
+    outputPreparer: OutputPreparing = FakeOutputPreparer(),
+    resourceAccess: SecurityScopedResourceAccessing = FakeResourceAccess()
   ) -> ConversionQueue {
     let executor = executor ?? FakeExecutor()
 
@@ -91,7 +107,8 @@ final class ConversionQueueTests: XCTestCase {
       executor: executor,
       toolLocator: toolLocator,
       destinationStore: destinationStore,
-      outputPreparer: outputPreparer
+      outputPreparer: outputPreparer,
+      resourceAccess: resourceAccess
     )
   }
 }
@@ -214,5 +231,17 @@ private final class FakeOutputPreparer: OutputPreparing {
   func prepareOutput(for output: PlannedOutput) throws {
     outputs.append(output)
     try result.get()
+  }
+}
+
+private final class FakeResourceAccess: SecurityScopedResourceAccessing {
+  private(set) var accessedURLs: [[URL]] = []
+
+  func access<T>(
+    urls: [URL],
+    operation: () async throws -> T
+  ) async throws -> T {
+    accessedURLs.append(urls)
+    return try await operation()
   }
 }

@@ -20,6 +20,7 @@ final class ConversionQueue: ObservableObject {
   private let toolLocator: ToolLocating
   private let destinationStore: DestinationPersisting
   private let outputPreparer: OutputPreparing
+  private let resourceAccess: SecurityScopedResourceAccessing
   private var shouldCancelActiveRun = false
 
   init(
@@ -28,7 +29,8 @@ final class ConversionQueue: ObservableObject {
     executor: ConversionExecuting,
     toolLocator: ToolLocating,
     destinationStore: DestinationPersisting = UserDefaultsDestinationStore(),
-    outputPreparer: OutputPreparing = OutputPreparer()
+    outputPreparer: OutputPreparing = OutputPreparer(),
+    resourceAccess: SecurityScopedResourceAccessing = SecurityScopedResourceAccess()
   ) {
     self.analyzer = analyzer
     self.planner = planner
@@ -36,6 +38,7 @@ final class ConversionQueue: ObservableObject {
     self.toolLocator = toolLocator
     self.destinationStore = destinationStore
     self.outputPreparer = outputPreparer
+    self.resourceAccess = resourceAccess
     recentDestinationURLs = destinationStore.loadRecentDestinations()
     savedDestinationURLs = destinationStore.loadSavedDestinations()
   }
@@ -195,7 +198,9 @@ final class ConversionQueue: ObservableObject {
     }
 
     do {
-      let media = try await analyzer.analyze(url: sourceURL)
+      let media = try await resourceAccess.access(urls: [sourceURL]) {
+        try await analyzer.analyze(url: sourceURL)
+      }
 
       updateItem(id) { item in
         item.media = media
@@ -217,13 +222,35 @@ final class ConversionQueue: ObservableObject {
     }
 
     do {
-      try outputPreparer.prepareOutput(for: plan.output)
+      let accessURLs = resourceAccessURLs(for: plan)
+      let duration = item(with: id)?.media?.duration
 
-      for command in plan.subtitleExtractionCommands {
+      try await resourceAccess.access(urls: accessURLs) {
+        try outputPreparer.prepareOutput(for: plan.output)
+
+        for command in plan.subtitleExtractionCommands {
+          try await executor.run(
+            command,
+            duration: nil,
+            progress: { _ in },
+            log: { [weak self] line in
+              Task { @MainActor in
+                self?.appendLog(line, to: id)
+              }
+            }
+          )
+        }
+
         try await executor.run(
-          command,
-          duration: nil,
-          progress: { _ in },
+          plan.primaryCommand,
+          duration: duration,
+          progress: { [weak self] progress in
+            Task { @MainActor in
+              self?.updateItem(id) { item in
+                item.progress = progress
+              }
+            }
+          },
           log: { [weak self] line in
             Task { @MainActor in
               self?.appendLog(line, to: id)
@@ -231,23 +258,6 @@ final class ConversionQueue: ObservableObject {
           }
         )
       }
-
-      try await executor.run(
-        plan.primaryCommand,
-        duration: item(with: id)?.media?.duration,
-        progress: { [weak self] progress in
-          Task { @MainActor in
-            self?.updateItem(id) { item in
-              item.progress = progress
-            }
-          }
-        },
-        log: { [weak self] line in
-          Task { @MainActor in
-            self?.appendLog(line, to: id)
-          }
-        }
-      )
 
       updateItem(id) { item in
         item.progress = 1
@@ -345,6 +355,27 @@ final class ConversionQueue: ObservableObject {
     }
   }
 
+  private func resourceAccessURLs(for plan: ConversionPlan) -> [URL] {
+    var urls = plan.primaryCommand.arguments.compactMap(URL.filePathArgument)
+    urls.append(plan.output.videoURL.deletingLastPathComponent())
+    urls.append(contentsOf: plan.output.sidecarURLs.map { $0.deletingLastPathComponent() })
+
+    if let selectedFolderURL = outputOptions.selectedFolderURL {
+      urls.append(selectedFolderURL)
+    }
+
+    return urls
+  }
+}
+
+extension URL {
+  fileprivate static func filePathArgument(_ argument: String) -> URL? {
+    guard argument.hasPrefix("/") else {
+      return nil
+    }
+
+    return URL(fileURLWithPath: argument)
+  }
 }
 
 extension ConversionQueue {
