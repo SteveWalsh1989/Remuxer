@@ -25,7 +25,6 @@
 		BF0000000000000000000016 /* SupportedInputFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000016 /* SupportedInputFile.swift */; };
 		BF0000000000000000000017 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000017 /* ContentView.swift */; };
 		BF0000000000000000000018 /* PlanDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000018 /* PlanDetailView.swift */; };
-		BF0000000000000000000019 /* QueueControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000019 /* QueueControlBar.swift */; };
 		BF0000000000000000000020 /* QueueListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000020 /* QueueListView.swift */; };
 		BF0000000000000000000021 /* DestinationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000021 /* DestinationStore.swift */; };
 		BF0000000000000000000022 /* OutputPreparer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000022 /* OutputPreparer.swift */; };
@@ -71,7 +70,6 @@
 		F00000000000000000000016 /* SupportedInputFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedInputFile.swift; sourceTree = "<group>"; };
 		F00000000000000000000017 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		F00000000000000000000018 /* PlanDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanDetailView.swift; sourceTree = "<group>"; };
-		F00000000000000000000019 /* QueueControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueControlBar.swift; sourceTree = "<group>"; };
 		F00000000000000000000020 /* QueueListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueListView.swift; sourceTree = "<group>"; };
 		F00000000000000000000021 /* DestinationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationStore.swift; sourceTree = "<group>"; };
 		F00000000000000000000022 /* OutputPreparer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputPreparer.swift; sourceTree = "<group>"; };
@@ -202,7 +200,6 @@
 			children = (
 				F00000000000000000000017 /* ContentView.swift */,
 				F00000000000000000000018 /* PlanDetailView.swift */,
-				F00000000000000000000019 /* QueueControlBar.swift */,
 				F00000000000000000000020 /* QueueListView.swift */,
 			);
 			path = Views;
@@ -354,7 +351,6 @@
 				BF0000000000000000000016 /* SupportedInputFile.swift in Sources */,
 				BF0000000000000000000017 /* ContentView.swift in Sources */,
 				BF0000000000000000000018 /* PlanDetailView.swift in Sources */,
-				BF0000000000000000000019 /* QueueControlBar.swift in Sources */,
 				BF0000000000000000000020 /* QueueListView.swift in Sources */,
 				BF0000000000000000000021 /* DestinationStore.swift in Sources */,
 				BF0000000000000000000022 /* OutputPreparer.swift in Sources */,

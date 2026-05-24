@@ -3,155 +3,123 @@ import SwiftUI
 struct QueueListView: View {
   @ObservedObject var queue: ConversionQueue
   @Binding var selectedItemIDs: Set<QueueItem.ID>
-  let isDropTargeted: Bool
-  let addFiles: () -> Void
 
-  @ViewBuilder
   var body: some View {
-    if queue.items.isEmpty {
-      EmptyQueueView(
-        isDropTargeted: isDropTargeted,
-        addFiles: addFiles
-      )
-    } else {
-      queueList
-    }
-  }
-
-  private var queueList: some View {
     List(selection: $selectedItemIDs) {
-      queueRows
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .listStyle(.inset)
-  }
-
-  private var queueRows: some View {
-    ForEach(queue.items) { item in
-      QueueItemRow(
-        item: item,
-        presetSelection: Binding(
-          get: { item.selectedPreset },
-          set: { queue.setPreset($0, for: item.id) }
-        ),
-        outputName: Binding(
-          get: { item.customOutputName },
-          set: { queue.setCustomOutputName($0, for: item.id) }
-        )
-      )
-      .tag(item.id)
-      .contextMenu {
-        Button("Analyze") {
-          Task { await queue.analyzeItems(with: [item.id]) }
-        }
-
-        Button("Retry") {
-          Task { await queue.retryItems(with: [item.id]) }
-        }
-
-        Divider()
-
-        Button("Reset Output Name") {
-          queue.resetCustomOutputNames(for: [item.id])
-        }
-
-        Button("Remove") {
-          queue.removeItems(with: [item.id])
-        }
-      }
-    }
-  }
-}
-
-private struct QueueItemRow: View {
-  let item: QueueItem
-  @Binding var presetSelection: ConversionPreset
-  @Binding var outputName: String
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      HStack(alignment: .center, spacing: 12) {
-        VStack(alignment: .leading, spacing: 3) {
-          Text(item.fileName)
-            .font(.headline)
-            .lineLimit(1)
-
-          Text(item.sourceURL.path)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-            .truncationMode(.middle)
-        }
-
-        Spacer(minLength: 12)
-
-        Picker("Preset", selection: $presetSelection) {
-          ForEach(ConversionPreset.allCases) { preset in
-            Text(preset.displayName).tag(preset)
+      if queue.items.isEmpty == false {
+        Section("Queue") {
+          ForEach(queue.items) { item in
+            QueueSidebarRow(item: item)
+              .tag(item.id)
+              .contextMenu {
+                itemContextMenu(for: item)
+              }
           }
         }
-        .labelsHidden()
-        .frame(width: 150)
-
-        TextField(item.defaultOutputName, text: $outputName)
-          .textFieldStyle(.roundedBorder)
-          .frame(width: 190)
-          .help("Output file name")
-
-        StatusBadge(status: item.status)
-          .frame(width: 96, alignment: .trailing)
       }
-
-      HStack(spacing: 14) {
-        Label(item.streamSummary, systemImage: "film.stack")
-        Label(
-          item.issueSummary.isEmpty ? "No plan" : item.issueSummary,
-          systemImage: "list.bullet.clipboard")
-
-        if let plan = item.plan {
-          Label(plan.output.videoURL.lastPathComponent, systemImage: "arrow.down.doc")
-            .lineLimit(1)
-            .truncationMode(.middle)
-        } else if let planningErrorMessage = item.planningErrorMessage {
-          Label(planningErrorMessage, systemImage: "exclamationmark.triangle")
-            .lineLimit(1)
-            .truncationMode(.middle)
-        }
-
-        Spacer()
-
-        if item.status == .converting {
-          ProgressView(value: item.progress)
-            .frame(width: 120)
-
-          Text(QueueFormatters.percentage(item.progress))
-            .font(.caption.monospacedDigit())
-            .foregroundStyle(.secondary)
-            .frame(width: 38, alignment: .trailing)
-        }
-      }
-      .font(.caption)
-      .foregroundStyle(.secondary)
     }
-    .padding(.vertical, 6)
-    .listRowInsets(EdgeInsets(top: 8, leading: 14, bottom: 8, trailing: 14))
+    .listStyle(.sidebar)
+    .overlay {
+      if queue.items.isEmpty {
+        SidebarEmptyState()
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func itemContextMenu(for item: QueueItem) -> some View {
+    Button("Analyze") {
+      Task { await queue.analyzeItems(with: [item.id]) }
+    }
+
+    Button("Retry") {
+      Task { await queue.retryItems(with: [item.id]) }
+    }
+
+    Menu("Preset") {
+      ForEach(ConversionPreset.allCases) { preset in
+        Button(preset.displayName) {
+          queue.setPreset(preset, for: item.id)
+        }
+      }
+    }
+
+    Divider()
+
+    Button("Reset Output Name") {
+      queue.resetCustomOutputNames(for: [item.id])
+    }
+
+    Button("Remove") {
+      queue.removeItems(with: [item.id])
+    }
   }
 }
 
-private struct StatusBadge: View {
-  let status: QueueItemStatus
+private struct QueueSidebarRow: View {
+  let item: QueueItem
 
   var body: some View {
-    Text(status.displayName)
-      .font(.caption.weight(.semibold))
-      .foregroundStyle(foregroundStyle)
-      .padding(.horizontal, 8)
-      .padding(.vertical, 4)
-      .background(backgroundStyle, in: Capsule())
+    HStack(spacing: 10) {
+      Image(systemName: statusSymbol)
+        .font(.system(size: 14, weight: .medium))
+        .foregroundStyle(statusColor)
+        .frame(width: 18)
+
+      VStack(alignment: .leading, spacing: 3) {
+        Text(item.fileName)
+          .font(.body)
+          .lineLimit(1)
+
+        HStack(spacing: 5) {
+          Text(item.selectedPreset.displayName)
+          Text("·")
+          Text(item.status.displayName)
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+
+        if item.issueSummary.isEmpty == false {
+          Text(item.issueSummary)
+            .font(.caption2)
+            .foregroundStyle(issueColor)
+            .lineLimit(1)
+        }
+      }
+
+      Spacer(minLength: 6)
+
+      if item.status == .converting {
+        ProgressView(value: item.progress)
+          .controlSize(.small)
+          .frame(width: 42)
+      }
+    }
+    .padding(.vertical, 5)
   }
 
-  private var foregroundStyle: Color {
-    switch status {
+  private var statusSymbol: String {
+    switch item.status {
+    case .queued:
+      "clock"
+    case .analyzing:
+      "waveform.path.ecg"
+    case .ready:
+      "checkmark.circle"
+    case .converting:
+      "play.circle"
+    case .completed:
+      "checkmark.circle.fill"
+    case .failed:
+      "xmark.octagon"
+    case .blocked:
+      "hand.raised"
+    }
+  }
+
+  private var statusColor: Color {
+    switch item.status {
     case .blocked, .failed:
       .red
     case .completed:
@@ -159,55 +127,30 @@ private struct StatusBadge: View {
     case .converting, .analyzing:
       .blue
     case .queued, .ready:
-      .primary
+      .secondary
     }
   }
 
-  private var backgroundStyle: Color {
-    foregroundStyle.opacity(0.14)
+  private var issueColor: Color {
+    item.plan?.blockers.isEmpty == false ? .red : .orange
   }
 }
 
-private struct EmptyQueueView: View {
-  let isDropTargeted: Bool
-  let addFiles: () -> Void
-
+private struct SidebarEmptyState: View {
   var body: some View {
-    ZStack {
-      RoundedRectangle(cornerRadius: 8, style: .continuous)
-        .fill(.regularMaterial)
+    VStack(spacing: 8) {
+      Image(systemName: "tray")
+        .font(.system(size: 24, weight: .light))
+        .foregroundStyle(.secondary)
 
-      RoundedRectangle(cornerRadius: 8, style: .continuous)
-        .strokeBorder(
-          isDropTargeted ? Color.accentColor : Color.secondary.opacity(0.28),
-          style: StrokeStyle(lineWidth: isDropTargeted ? 2 : 1, dash: [7, 6])
-        )
-        .allowsHitTesting(false)
+      Text("No Files")
+        .font(.headline)
 
-      VStack(spacing: 18) {
-        Image(systemName: "film.stack")
-          .font(.system(size: 44, weight: .light))
-          .foregroundStyle(isDropTargeted ? Color.accentColor : Color.secondary)
-
-        VStack(spacing: 5) {
-          Text("Drop MKV files here")
-            .font(.title3.weight(.semibold))
-
-          Text("Plans, warnings, and blockers appear before conversion starts.")
-            .font(.callout)
-            .foregroundStyle(.secondary)
-            .multilineTextAlignment(.center)
-        }
-
-        Button {
-          addFiles()
-        } label: {
-          Label("Add MKV Files...", systemImage: "plus")
-        }
-        .buttonStyle(.borderedProminent)
-      }
+      Text("Use the drop zone to add MKV files.")
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .multilineTextAlignment(.center)
     }
-    .padding(28)
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .padding()
   }
 }
