@@ -7,7 +7,12 @@ struct PlanDetailView: View {
   let outputName: Binding<String>?
   let resetOutputName: () -> Void
   let toolchainErrorMessage: String?
-  let removesSourceAfterSuccess: Bool
+  let queueItems: [QueueItem]
+  let selectedItemIDs: Set<QueueItem.ID>
+  let seriesNaming: Binding<SeriesOutputNamingPreference>
+  let extractsSubtitleSidecars: Binding<Bool>
+  let removesSourceAfterSuccess: Binding<Bool>
+  let isWorking: Bool
   let isDeveloperModeEnabled: Bool
 
   init(
@@ -16,7 +21,12 @@ struct PlanDetailView: View {
     outputName: Binding<String>? = nil,
     resetOutputName: @escaping () -> Void = {},
     toolchainErrorMessage: String? = nil,
-    removesSourceAfterSuccess: Bool = false,
+    queueItems: [QueueItem] = [],
+    selectedItemIDs: Set<QueueItem.ID> = [],
+    seriesNaming: Binding<SeriesOutputNamingPreference> = .constant(SeriesOutputNamingPreference()),
+    extractsSubtitleSidecars: Binding<Bool> = .constant(false),
+    removesSourceAfterSuccess: Binding<Bool> = .constant(OutputOptions().removeSourceAfterSuccess),
+    isWorking: Bool = false,
     isDeveloperModeEnabled: Bool = false
   ) {
     self.item = item
@@ -24,7 +34,12 @@ struct PlanDetailView: View {
     self.outputName = outputName
     self.resetOutputName = resetOutputName
     self.toolchainErrorMessage = toolchainErrorMessage
+    self.queueItems = queueItems
+    self.selectedItemIDs = selectedItemIDs
+    self.seriesNaming = seriesNaming
+    self.extractsSubtitleSidecars = extractsSubtitleSidecars
     self.removesSourceAfterSuccess = removesSourceAfterSuccess
+    self.isWorking = isWorking
     self.isDeveloperModeEnabled = isDeveloperModeEnabled
   }
 
@@ -37,9 +52,8 @@ struct PlanDetailView: View {
 
         if let item {
           selectedFileHeader(item)
-          itemOptions(item)
-          itemProgress(item)
-          itemDetails(item)
+          queueOptions()
+          itemAttention(item)
 
           if isDeveloperModeEnabled {
             developerDetails(item)
@@ -65,41 +79,39 @@ struct PlanDetailView: View {
   }
 
   private func selectedFileHeader(_ item: QueueItem) -> some View {
-    HStack(alignment: .center, spacing: 14) {
-      Image(systemName: "film")
-        .font(.system(size: 28, weight: .light))
-        .foregroundStyle(.secondary)
-        .frame(width: 34)
+    VStack(alignment: .leading, spacing: 12) {
+      HStack(alignment: .center, spacing: 14) {
+        Image(systemName: "film")
+          .font(.system(size: 28, weight: .light))
+          .foregroundStyle(.secondary)
+          .frame(width: 34)
 
-      VStack(alignment: .leading, spacing: 4) {
-        Text(item.fileName)
-          .font(.title3.weight(.semibold))
+        VStack(alignment: .leading, spacing: 4) {
+          Text(item.fileName)
+            .font(.title3.weight(.semibold))
+            .lineLimit(1)
+
+          HStack(spacing: 6) {
+            Text(item.selectedPreset.displayName)
+            Text("·")
+            Text(item.streamSummary)
+          }
+          .font(.caption)
+          .foregroundStyle(.secondary)
           .lineLimit(1)
-
-        HStack(spacing: 6) {
-          Text(item.selectedPreset.displayName)
-          Text("·")
-          Text(item.streamSummary)
         }
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
+
+        Spacer()
+
+        if let plan = item.plan {
+          IssueSummaryBadges(blockers: plan.blockers, warnings: plan.warnings, compact: true)
+        }
+
+        DetailStatusBadge(status: item.status)
       }
 
-      Spacer()
-
-      if removesSourceAfterSuccess {
-        Image(systemName: "trash")
-          .font(.caption.weight(.semibold))
-          .foregroundStyle(.red)
-          .help("The original file will be removed after a successful conversion.")
-      }
-
-      if let plan = item.plan {
-        IssueSummaryBadges(blockers: plan.blockers, warnings: plan.warnings, compact: true)
-      }
-
-      DetailStatusBadge(status: item.status)
+      headerProgress(for: item)
+      fileControls(for: item)
     }
     .padding(18)
     .remuxerGlassPanel(cornerRadius: 18)
@@ -115,104 +127,106 @@ struct PlanDetailView: View {
   }
 
   @ViewBuilder
-  private func itemOptions(_ item: QueueItem) -> some View {
+  private func queueOptions() -> some View {
+    if queueItems.isEmpty == false {
+      QueueOptionsSection(
+        targetItems: batchTargetItems,
+        showsSeriesNaming: queueItems.count > 1,
+        seriesNaming: seriesNaming,
+        extractsSubtitleSidecars: extractsSubtitleSidecars,
+        removesSourceAfterSuccess: removesSourceAfterSuccess,
+        isWorking: isWorking
+      )
+    }
+  }
+
+  @ViewBuilder
+  private func fileControls(for item: QueueItem) -> some View {
     if let presetSelection, let outputName {
-      DetailSection(title: "File Options") {
-        Picker("Preset", selection: presetSelection) {
-          ForEach(ConversionPreset.allCases) { preset in
-            Text(preset.displayName).tag(preset)
+      DetailDivider()
+
+      Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 10) {
+        GridRow {
+          Label("Preset", systemImage: "slider.horizontal.3")
+            .font(.caption.weight(.medium))
+            .foregroundStyle(.secondary)
+            .frame(width: 82, alignment: .leading)
+
+          Picker("Preset", selection: presetSelection) {
+            ForEach(ConversionPreset.allCases) { preset in
+              Text(preset.displayName).tag(preset)
+            }
+          }
+          .labelsHidden()
+          .pickerStyle(.menu)
+          .frame(maxWidth: 240, alignment: .leading)
+        }
+
+        GridRow {
+          Label("Name", systemImage: "textformat")
+            .font(.caption.weight(.medium))
+            .foregroundStyle(.secondary)
+            .frame(width: 82, alignment: .leading)
+
+          HStack(spacing: 8) {
+            TextField(item.defaultOutputName, text: outputName)
+              .textFieldStyle(.roundedBorder)
+
+            Button("Reset") {
+              resetOutputName()
+            }
+            .disabled(outputName.wrappedValue.isEmpty)
           }
         }
-        .pickerStyle(.menu)
+      }
 
-        HStack(spacing: 8) {
-          TextField(item.defaultOutputName, text: outputName)
-            .textFieldStyle(.roundedBorder)
+      if let plan = item.plan {
+        DetailDivider()
 
-          Button("Reset") {
-            resetOutputName()
-          }
-          .disabled(outputName.wrappedValue.isEmpty)
-        }
+        OutputSummaryContent(
+          videoFileName: plan.output.videoURL.lastPathComponent,
+          folder: displayPath(plan.output.videoURL.deletingLastPathComponent()),
+          mode: plan.mode.displayName,
+          sidecarFileNames: plan.output.sidecarURLs.map(\.lastPathComponent)
+        )
       }
     }
   }
 
   @ViewBuilder
-  private func itemProgress(_ item: QueueItem) -> some View {
+  private func headerProgress(for item: QueueItem) -> some View {
     switch item.status {
     case .analyzing:
-      DetailSection(title: "Progress") {
-        HStack(spacing: 9) {
-          ProgressView()
-            .controlSize(.small)
+      HStack(spacing: 9) {
+        ProgressView()
+          .controlSize(.small)
 
-          Text("Analyzing file")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
+        Text("Analyzing file")
+          .font(.caption.weight(.medium))
+          .foregroundStyle(.secondary)
       }
-    case .converting, .completed:
-      let progress = boundedProgress(item.progress)
-
-      DetailSection(title: "Progress") {
-        ProgressSummary(
-          status: item.status,
-          progress: progress,
-          message: item.status == .completed ? "Complete" : "Converting file"
-        )
-      }
+      .padding(.leading, 48)
+    case .converting:
+      FileProgressStrip(status: item.status, progress: boundedProgress(item.progress))
     case .failed where item.progress > 0:
-      let progress = boundedProgress(item.progress)
-
-      DetailSection(title: "Progress") {
-        ProgressSummary(
-          status: item.status, progress: progress, message: "Stopped before completion")
-      }
+      FileProgressStrip(
+        status: item.status,
+        progress: boundedProgress(item.progress),
+        label: "Stopped before completion"
+      )
     default:
       EmptyView()
     }
   }
 
   @ViewBuilder
-  private func itemDetails(_ item: QueueItem) -> some View {
+  private func itemAttention(_ item: QueueItem) -> some View {
     if let planningErrorMessage = item.planningErrorMessage {
       DetailSection(title: "Needs Attention") {
         Label(planningErrorMessage, systemImage: "exclamationmark.triangle")
           .font(.caption)
           .foregroundStyle(.orange)
           .fixedSize(horizontal: false, vertical: true)
-      }
-    }
-
-    if let plan = item.plan {
-      DetailSection(title: "Output") {
-        DetailRow(label: "Video", value: plan.output.videoURL.lastPathComponent)
-        DetailRow(
-          label: "Folder", value: displayPath(plan.output.videoURL.deletingLastPathComponent()))
-        DetailRow(label: "Mode", value: plan.mode.displayName)
-
-        if plan.output.sidecarURLs.isEmpty == false {
-          DetailDivider()
-
-          ForEach(plan.output.sidecarURLs, id: \.self) { sidecarURL in
-            DetailRow(label: "Sidecar", value: sidecarURL.lastPathComponent)
-          }
-        }
-
-        if removesSourceAfterSuccess {
-          DetailDivider()
-
-          Label("Original will be removed after successful conversion.", systemImage: "trash")
-            .font(.caption)
-            .foregroundStyle(.red)
-        }
-      }
-
-      if plan.warnings.isEmpty == false || plan.blockers.isEmpty == false {
-        DetailSection(title: "Checks") {
-          IssueSummaryBadges(blockers: plan.blockers, warnings: plan.warnings)
-        }
       }
     }
   }
@@ -303,5 +317,13 @@ struct PlanDetailView: View {
 
   private func logsText(for item: QueueItem) -> String {
     item.logLines.joined(separator: "\n")
+  }
+
+  private var batchTargetItems: [QueueItem] {
+    guard selectedItemIDs.count > 1 else {
+      return queueItems
+    }
+
+    return queueItems.filter { selectedItemIDs.contains($0.id) }
   }
 }

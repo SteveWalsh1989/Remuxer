@@ -15,6 +15,7 @@ Remuxer is a production-quality native macOS SwiftUI app for converting `.mkv` f
 ## Project Context And Docs
 
 - Read `README.md`, `docs/README.md`, and relevant files under `docs/` before making product or architecture changes.
+- Read `docs/ui-ux-standards.md` before changing SwiftUI views, controls, icon buttons, tooltips, layout, color, state presentation, or visual hierarchy.
 - Treat `docs/planning/` as local planning context. Promote durable decisions, setup steps, and user-facing behavior into tracked docs when they become part of the product.
 - Update documentation in the same change when behavior, setup, commands, architecture boundaries, or preset semantics change.
 - Keep the root README useful for a new contributor: purpose, prerequisites, build/test commands, architecture map, and current product constraints.
@@ -45,6 +46,21 @@ Remuxer is a production-quality native macOS SwiftUI app for converting `.mkv` f
 - Build a calm, dense, batch-work UI. The queue is the main screen.
 - Prefer native macOS affordances: toolbar actions, menus/commands, file importer, drag and drop, settings, keyboard shortcuts, and standard panels.
 - Keep App Store compatibility in mind: isolate external process execution, file access, sandbox-sensitive behavior, and any future bundled-FFmpeg choice behind narrow interfaces.
+
+## UI And UX Standards
+
+- Treat `docs/ui-ux-standards.md` as mandatory product guidance, not optional polish.
+- Start UI work by naming the user's job for the changed screen and the visible states affected.
+- Prioritize human-readable layouts over compact icon-heavy layouts. Compactness is a failure if the control purpose or state becomes ambiguous.
+- Anything that looks clickable must be clickable. Anything passive must not look like a control or destructive action.
+- Icon-only buttons must use one shared tooltip mechanism and show exactly one tooltip. Do not combine `.help` with the custom icon-control tooltip on the same icon-only control.
+- Every icon-only button must have a tooltip, accessibility label, and accessibility hint that describe the action in plain language.
+- Do not use destructive symbols or red styling for passive hints. A red trash icon means delete/remove/destructive action, not background status.
+- Prefer labels for important, destructive, unusual, or hard-to-infer actions.
+- Keep file identity, queue status, next action, and risk/warnings visually distinct.
+- After UI edits, launch the app and inspect the affected screens/states before finalizing. If visual inspection is not possible, say so explicitly.
+- Before finalizing UI work, run a visual critique pass for readability, hierarchy, affordance, tooltip count, disabled states, long text, and error/warning/destructive color use.
+- In the handoff for UI changes, state what the user will see differently and what visual states were checked.
 
 ## FFmpeg And Process Rules
 

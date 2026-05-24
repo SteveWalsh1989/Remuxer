@@ -3,7 +3,6 @@ import SwiftUI
 struct QueueListView: View {
   @ObservedObject var queue: ConversionQueue
   @Binding var selectedItemIDs: Set<QueueItem.ID>
-  @Binding var isDeveloperModeEnabled: Bool
 
   var body: some View {
     VStack(spacing: 0) {
@@ -29,14 +28,11 @@ struct QueueListView: View {
 
       Divider()
 
-      Toggle(isOn: $isDeveloperModeEnabled) {
-        Label("Dev Mode", systemImage: "hammer")
+      if queue.items.isEmpty == false {
+        QueueFooter(queue: queue)
+
+        Divider()
       }
-      .toggleStyle(.switch)
-      .controlSize(.small)
-      .padding(.horizontal, 14)
-      .padding(.vertical, 10)
-      .help("Show FFmpeg commands, logs, and raw file paths for debugging.")
     }
   }
 
@@ -70,15 +66,46 @@ struct QueueListView: View {
   }
 }
 
+private struct QueueFooter: View {
+  @ObservedObject var queue: ConversionQueue
+
+  var body: some View {
+    HStack(spacing: 8) {
+      Label(completedSummary, systemImage: "checkmark.circle")
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+
+      Spacer(minLength: 8)
+
+      Button {
+        queue.clearCompleted()
+      } label: {
+        Label("Clear Completed", systemImage: "trash")
+      }
+      .controlSize(.small)
+      .disabled(queue.canClearCompleted == false)
+      .iconControlTooltip("Remove completed files from the queue.")
+    }
+    .padding(.horizontal, 14)
+    .padding(.vertical, 8)
+  }
+
+  private var completedSummary: String {
+    queue.completedCount == 1 ? "1 completed" : "\(queue.completedCount) completed"
+  }
+}
+
 private struct QueueSidebarRow: View {
   let item: QueueItem
 
   var body: some View {
-    HStack(spacing: 10) {
+    HStack(alignment: .top, spacing: 10) {
       Image(systemName: item.status.progressSymbol)
         .font(.system(size: 14, weight: .medium))
         .foregroundStyle(item.status.progressTint)
         .frame(width: 18)
+        .help(statusHelp)
 
       VStack(alignment: .leading, spacing: 4) {
         Text(item.fileName)
@@ -87,8 +114,11 @@ private struct QueueSidebarRow: View {
 
         HStack(spacing: 5) {
           Text(item.selectedPreset.displayName)
-          Text("·")
-          Text(item.status.displayName)
+
+          if showsStatusText {
+            Text("·")
+            Text(item.status.displayName)
+          }
         }
         .font(.caption)
         .foregroundStyle(.secondary)
@@ -96,9 +126,10 @@ private struct QueueSidebarRow: View {
 
         if shouldShowInlineProgress {
           ConversionProgressMeter(progress: item.progress, status: item.status, height: 4)
-            .frame(width: 96)
+            .frame(maxWidth: .infinity)
         }
       }
+      .frame(maxWidth: .infinity, alignment: .leading)
 
       Spacer(minLength: 6)
 
@@ -112,15 +143,23 @@ private struct QueueSidebarRow: View {
     .padding(.vertical, 5)
   }
 
+  private var showsStatusText: Bool {
+    item.status != .completed
+  }
+
   private var shouldShowInlineProgress: Bool {
     switch item.status {
-    case .converting, .completed:
+    case .converting:
       true
     case .failed:
       item.progress > 0
-    case .queued, .analyzing, .ready, .blocked:
+    case .queued, .analyzing, .ready, .completed, .blocked:
       false
     }
+  }
+
+  private var statusHelp: String {
+    item.status == .completed ? "Complete" : item.status.displayName
   }
 }
 

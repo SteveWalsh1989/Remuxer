@@ -28,6 +28,13 @@ final class FFprobeDecodingTests: XCTestCase {
             "codec_name": "subrip",
             "codec_type": "subtitle",
             "tags": { "language": "eng" }
+          },
+          {
+            "index": 3,
+            "codec_name": "mjpeg",
+            "codec_type": "video",
+            "disposition": { "attached_pic": 1 },
+            "tags": { "title": "Cover" }
           }
         ],
         "chapters": [
@@ -52,8 +59,11 @@ final class FFprobeDecodingTests: XCTestCase {
     XCTAssertEqual(media.formatName, "matroska,webm")
     XCTAssertEqual(media.duration, 120.5)
     XCTAssertEqual(media.videoStreams.first?.codecName, "h264")
+    XCTAssertEqual(media.videoStreams.map(\.index), [0])
     XCTAssertEqual(media.audioStreams.first?.codecName, "flac")
     XCTAssertEqual(media.subtitleStreams.first?.language, "eng")
+    XCTAssertEqual(media.attachmentStreams.first?.index, 3)
+    XCTAssertTrue(media.attachmentStreams.first?.isAttachedPicture == true)
     XCTAssertEqual(media.chapters.first?.title, "Opening")
     XCTAssertEqual(media.metadata["title"], "Fixture")
   }

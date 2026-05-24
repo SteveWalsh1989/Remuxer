@@ -248,13 +248,35 @@ struct ConversionPlanner: ConversionPlanGenerating {
     outputOptions: OutputOptions,
     customOutputName: String?
   ) throws -> SubtitleExtractionPlan {
+    guard preset != .archive else {
+      return SubtitleExtractionPlan(commands: [], outputURLs: [], warnings: [])
+    }
+
+    let unsupportedSubtitleStreams = media.subtitleStreams.filter {
+      StreamCompatibilityRules.canCopySubtitleToMP4($0) == false
+    }
+
+    guard outputOptions.extractSubtitleSidecars else {
+      return SubtitleExtractionPlan(
+        commands: [],
+        outputURLs: [],
+        warnings: unsupportedSubtitleStreams.map { stream in
+          PlanIssue(
+            severity: .warning,
+            message:
+              "Subtitle stream #\(stream.index) uses \(stream.codecName) and will not be included "
+              + "because extra subtitle file extraction is off."
+          )
+        }
+      )
+    }
+
     var reservedURLs = Set<URL>()
     var outputURLs: [URL] = []
     var commands: [ProcessCommand] = []
     var warnings: [PlanIssue] = []
 
-    for stream in media.subtitleStreams
-    where StreamCompatibilityRules.canCopySubtitleToMP4(stream) == false {
+    for stream in unsupportedSubtitleStreams {
       let sidecarExtension = StreamCompatibilityRules.sidecarExtension(for: stream)
       let sidecarURL = try outputPathResolver.sidecarURL(
         for: media.sourceURL,
@@ -336,12 +358,16 @@ struct ConversionPlanner: ConversionPlanGenerating {
     return [
       PlanIssue(
         severity: .warning,
-        message: "MKV attachments cannot be preserved in MP4 and are not mapped into the output."
+        message:
+          "Attachments and cover art cannot be preserved in MP4 and are not mapped into the output."
       )
     ]
   }
 
-  private func commonInputArguments(for media: ProbedMediaFile, outputOptions: OutputOptions)
+}
+
+extension ConversionPlanner {
+  fileprivate func commonInputArguments(for media: ProbedMediaFile, outputOptions: OutputOptions)
     -> [String]
   {
     [
@@ -352,7 +378,7 @@ struct ConversionPlanner: ConversionPlanGenerating {
     ]
   }
 
-  private func mapArguments(for streams: [MediaStream]) -> [String] {
+  fileprivate func mapArguments(for streams: [MediaStream]) -> [String] {
     streams.flatMap { ["-map", "0:\($0.index)"] }
   }
 }

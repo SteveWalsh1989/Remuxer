@@ -69,138 +69,35 @@ struct EmptyQueueDropZone: View {
   }
 }
 
-struct OutputNameSequenceSheet: View {
-  let targetItems: [QueueItem]
-  let isWorking: Bool
-  let apply: (String, String) throws -> Void
-
-  @Environment(\.dismiss) private var dismiss
-  @State private var prefix = ""
-  @State private var startNumberText = "01"
-  @State private var errorMessage: String?
+struct IconOnlyButton: View {
+  let title: String
+  let systemImage: String
+  let help: String
+  let action: () -> Void
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 16) {
-      VStack(alignment: .leading, spacing: 4) {
-        Text("Batch Rename")
-          .font(.headline)
-
-        Text(targetSummary)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-      }
-
-      VStack(alignment: .leading, spacing: 10) {
-        TextField("Prefix", text: $prefix)
-          .textFieldStyle(.roundedBorder)
-
-        TextField("Start Number", text: $startNumberText)
-          .textFieldStyle(.roundedBorder)
-
-        if isStartNumberInvalid {
-          Label("Start number must use digits.", systemImage: "exclamationmark.triangle")
-            .font(.caption)
-            .foregroundStyle(.orange)
-        }
-      }
-
-      VStack(alignment: .leading, spacing: 8) {
-        Text("Preview")
-          .font(.subheadline.weight(.semibold))
-
-        VStack(alignment: .leading, spacing: 6) {
-          if previewNames.isEmpty {
-            Text("No valid preview")
-              .font(.caption)
-              .foregroundStyle(.secondary)
-          } else {
-            ForEach(Array(previewNames.enumerated()), id: \.offset) { _, name in
-              HStack(spacing: 8) {
-                Image(systemName: "doc")
-                  .foregroundStyle(.secondary)
-                  .frame(width: 14)
-
-                Text(name)
-                  .font(.caption)
-                  .lineLimit(1)
-
-                Spacer()
-              }
-            }
-
-            if remainingPreviewCount > 0 {
-              Text("+ \(remainingPreviewCount) more")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-          }
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.quaternary, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-      }
-
-      if let errorMessage {
-        Label(errorMessage, systemImage: "exclamationmark.triangle")
-          .font(.caption)
-          .foregroundStyle(.red)
-      }
-
-      HStack {
-        Spacer()
-
-        Button("Cancel") {
-          dismiss()
-        }
-        .keyboardShortcut(.cancelAction)
-
-        Button {
-          applySequence()
-        } label: {
-          Label("Apply", systemImage: "checkmark")
-        }
-        .keyboardShortcut(.defaultAction)
-        .disabled(canApply == false)
-      }
+    Button(action: action) {
+      Label(title, systemImage: systemImage)
     }
-    .padding(20)
-    .frame(width: 420)
-    .onChange(of: prefix) { _, _ in errorMessage = nil }
-    .onChange(of: startNumberText) { _, _ in errorMessage = nil }
+    .labelStyle(.iconOnly)
+    .iconControlTooltip(help)
+    .accessibilityLabel(Text(title))
+    .accessibilityHint(Text(help))
   }
+}
 
-  private var targetSummary: String {
-    targetItems.count == 1 ? "1 file" : "\(targetItems.count) files"
+extension View {
+  func iconControlTooltip(_ help: String) -> some View {
+    modifier(IconControlTooltip(help: help))
   }
+}
 
-  private var sequence: OutputNameSequence? {
-    try? OutputNameSequence(prefix: prefix, startNumberText: startNumberText)
-  }
+private struct IconControlTooltip: ViewModifier {
+  let help: String
 
-  private var previewNames: [String] {
-    sequence?.names(count: min(targetItems.count, 5)) ?? []
-  }
-
-  private var remainingPreviewCount: Int {
-    max(0, targetItems.count - previewNames.count)
-  }
-
-  private var canApply: Bool {
-    isWorking == false && targetItems.isEmpty == false && sequence != nil
-  }
-
-  private var isStartNumberInvalid: Bool {
-    startNumberText.isEmpty == false
-      && OutputNameSequence.isValidStartNumber(startNumberText) == false
-  }
-
-  private func applySequence() {
-    do {
-      try apply(prefix, startNumberText)
-      dismiss()
-    } catch {
-      errorMessage = error.localizedDescription
-    }
+  func body(content: Content) -> some View {
+    content
+      .help(help)
   }
 }
 

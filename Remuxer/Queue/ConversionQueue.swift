@@ -50,6 +50,10 @@ final class ConversionQueue: ObservableObject {
     items.filter { $0.status == .completed }.count
   }
 
+  var canClearCompleted: Bool {
+    completedCount > 0
+  }
+
   func addFiles(_ urls: [URL]) {
     let existingURLs = Set(items.map(\.sourceURL))
     let newItems =

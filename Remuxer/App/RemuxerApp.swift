@@ -27,6 +27,17 @@ struct RemuxerApp: App {
     }
     .commands {
       CommandGroup(replacing: .newItem) {}
+      DeveloperModeCommands()
+    }
+  }
+}
+
+struct DeveloperModeCommands: Commands {
+  @AppStorage("isDeveloperModeEnabled") private var isDeveloperModeEnabled = false
+
+  var body: some Commands {
+    CommandGroup(after: .toolbar) {
+      Toggle("Developer Mode", isOn: $isDeveloperModeEnabled)
     }
   }
 }

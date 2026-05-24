@@ -3,7 +3,7 @@ import XCTest
 @testable import Remuxer
 
 final class ConversionPlannerTests: XCTestCase {
-  func testLosslessMP4CopiesCompatibleStreamsAndExtractsSubtitles() throws {
+  func testLosslessMP4SkipsSubtitleSidecarsByDefault() throws {
     let planner = ConversionPlanner(
       outputPathResolver: OutputPathResolver(fileChecker: EmptyFileChecker()))
     let plan = try planner.makePlan(
@@ -16,8 +16,30 @@ final class ConversionPlannerTests: XCTestCase {
     XCTAssertTrue(plan.canExecute)
     XCTAssertTrue(plan.primaryCommand.arguments.contains("-c"))
     XCTAssertTrue(plan.primaryCommand.arguments.contains("copy"))
-    XCTAssertEqual(plan.subtitleExtractionCommands.count, 1)
+    XCTAssertTrue(plan.subtitleExtractionCommands.isEmpty)
+    XCTAssertTrue(plan.output.sidecarURLs.isEmpty)
     XCTAssertEqual(plan.output.videoURL.lastPathComponent, "Movie.mp4")
+    XCTAssertTrue(
+      plan.warnings.contains {
+        $0.message
+          == "Subtitle stream #2 uses subrip and will not be included because extra subtitle file extraction is off."
+      }
+    )
+  }
+
+  func testLosslessMP4ExtractsSubtitleSidecarsWhenEnabled() throws {
+    let planner = ConversionPlanner(
+      outputPathResolver: OutputPathResolver(fileChecker: EmptyFileChecker()))
+    var outputOptions = OutputOptions()
+    outputOptions.extractSubtitleSidecars = true
+
+    let plan = try planner.makePlan(
+      for: media(audioCodec: "aac", subtitleCodec: "subrip"),
+      preset: .losslessMP4,
+      outputOptions: outputOptions
+    )
+
+    XCTAssertEqual(plan.subtitleExtractionCommands.count, 1)
     XCTAssertEqual(plan.output.sidecarURLs.first?.lastPathComponent, "Movie.2.eng.srt")
   }
 
@@ -34,6 +56,31 @@ final class ConversionPlannerTests: XCTestCase {
     XCTAssertEqual(plan.blockers.count, 2)
   }
 
+  func testLosslessMP4WarnsAndSkipsAttachedPictureVideoStreams() throws {
+    let planner = ConversionPlanner(
+      outputPathResolver: OutputPathResolver(fileChecker: EmptyFileChecker()))
+    let plan = try planner.makePlan(
+      for: media(
+        audioCodec: "aac",
+        subtitleCodec: nil,
+        extraStreams: [
+          stream(
+            index: 3, kind: .video, codecName: "mjpeg", title: "Cover", isAttachedPicture: true)
+        ]),
+      preset: .losslessMP4,
+      outputOptions: OutputOptions()
+    )
+
+    XCTAssertTrue(plan.canExecute)
+    XCTAssertFalse(plan.primaryCommand.arguments.contains("0:3"))
+    XCTAssertTrue(
+      plan.warnings.contains {
+        $0.message
+          == "Attachments and cover art cannot be preserved in MP4 and are not mapped into the output."
+      }
+    )
+  }
+
   func testAppleHEVCUsesHardwareEncoderAndWarnsForAudioConversion() throws {
     let planner = ConversionPlanner(
       outputPathResolver: OutputPathResolver(fileChecker: EmptyFileChecker()))
@@ -47,7 +94,7 @@ final class ConversionPlannerTests: XCTestCase {
     XCTAssertTrue(plan.canExecute)
     XCTAssertTrue(plan.primaryCommand.arguments.contains("hevc_videotoolbox"))
     XCTAssertTrue(plan.primaryCommand.arguments.contains("aac"))
-    XCTAssertEqual(plan.subtitleExtractionCommands.count, 1)
+    XCTAssertTrue(plan.subtitleExtractionCommands.isEmpty)
     XCTAssertEqual(plan.warnings.count, 2)
   }
 
@@ -64,13 +111,16 @@ final class ConversionPlannerTests: XCTestCase {
     XCTAssertTrue(plan.primaryCommand.arguments.contains("75"))
   }
 
-  func testCustomOutputNameAppliesToVideoAndSidecars() throws {
+  func testCustomOutputNameAppliesToVideoAndSidecarsWhenExtractionIsEnabled() throws {
     let planner = ConversionPlanner(
       outputPathResolver: OutputPathResolver(fileChecker: EmptyFileChecker()))
+    var outputOptions = OutputOptions()
+    outputOptions.extractSubtitleSidecars = true
+
     let plan = try planner.makePlan(
       for: media(audioCodec: "aac", subtitleCodec: "subrip"),
       preset: .losslessMP4,
-      outputOptions: OutputOptions(),
+      outputOptions: outputOptions,
       customOutputName: "Custom Movie"
     )
 
@@ -81,10 +131,13 @@ final class ConversionPlannerTests: XCTestCase {
   func testArchiveKeepsMKVContainerAndCopiesAllStreams() throws {
     let planner = ConversionPlanner(
       outputPathResolver: OutputPathResolver(fileChecker: EmptyFileChecker()))
+    var outputOptions = OutputOptions()
+    outputOptions.removeSourceAfterSuccess = false
+
     let plan = try planner.makePlan(
       for: media(videoCodec: "vp9", audioCodec: "flac", subtitleCodec: "subrip"),
       preset: .archive,
-      outputOptions: OutputOptions()
+      outputOptions: outputOptions
     )
 
     XCTAssertEqual(plan.mode, .archive)
@@ -119,7 +172,8 @@ final class ConversionPlannerTests: XCTestCase {
   private func media(
     videoCodec: String = "h264",
     audioCodec: String,
-    subtitleCodec: String?
+    subtitleCodec: String?,
+    extraStreams: [MediaStream] = []
   ) -> ProbedMediaFile {
     var streams = [
       stream(index: 0, kind: .video, codecName: videoCodec),
@@ -131,6 +185,7 @@ final class ConversionPlannerTests: XCTestCase {
         stream(index: 2, kind: .subtitle, codecName: subtitleCodec, language: "eng")
       )
     }
+    streams.append(contentsOf: extraStreams)
 
     return ProbedMediaFile(
       sourceURL: URL(fileURLWithPath: "/Movies/Movie.mkv"),
@@ -146,7 +201,9 @@ final class ConversionPlannerTests: XCTestCase {
     index: Int,
     kind: MediaStreamKind,
     codecName: String,
-    language: String? = nil
+    language: String? = nil,
+    title: String? = nil,
+    isAttachedPicture: Bool = false
   ) -> MediaStream {
     MediaStream(
       index: index,
@@ -154,10 +211,11 @@ final class ConversionPlannerTests: XCTestCase {
       codecName: codecName,
       codecLongName: nil,
       language: language,
-      title: nil,
+      title: title,
       width: nil,
       height: nil,
-      channelCount: nil
+      channelCount: nil,
+      isAttachedPicture: isAttachedPicture
     )
   }
 }

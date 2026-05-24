@@ -19,6 +19,60 @@ struct MediaStream: Codable, Equatable, Identifiable {
   let width: Int?
   let height: Int?
   let channelCount: Int?
+  let isAttachedPicture: Bool
+
+  enum CodingKeys: String, CodingKey {
+    case index
+    case kind
+    case codecName
+    case codecLongName
+    case language
+    case title
+    case width
+    case height
+    case channelCount
+    case isAttachedPicture
+  }
+
+  init(
+    index: Int,
+    kind: MediaStreamKind,
+    codecName: String,
+    codecLongName: String?,
+    language: String?,
+    title: String?,
+    width: Int?,
+    height: Int?,
+    channelCount: Int?,
+    isAttachedPicture: Bool = false
+  ) {
+    self.index = index
+    self.kind = kind
+    self.codecName = codecName
+    self.codecLongName = codecLongName
+    self.language = language
+    self.title = title
+    self.width = width
+    self.height = height
+    self.channelCount = channelCount
+    self.isAttachedPicture = isAttachedPicture
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+    index = try container.decode(Int.self, forKey: .index)
+    kind = try container.decode(MediaStreamKind.self, forKey: .kind)
+    codecName = try container.decode(String.self, forKey: .codecName)
+    codecLongName = try container.decodeIfPresent(String.self, forKey: .codecLongName)
+    language = try container.decodeIfPresent(String.self, forKey: .language)
+    title = try container.decodeIfPresent(String.self, forKey: .title)
+    width = try container.decodeIfPresent(Int.self, forKey: .width)
+    height = try container.decodeIfPresent(Int.self, forKey: .height)
+    channelCount = try container.decodeIfPresent(Int.self, forKey: .channelCount)
+    isAttachedPicture =
+      try container.decodeIfPresent(Bool.self, forKey: .isAttachedPicture) ?? false
+  }
 
   var id: Int { index }
 
@@ -53,7 +107,7 @@ struct ProbedMediaFile: Codable, Equatable {
   let metadata: [String: String]
 
   var videoStreams: [MediaStream] {
-    streams.filter { $0.kind == .video }
+    streams.filter { $0.kind == .video && $0.isAttachedPicture == false }
   }
 
   var audioStreams: [MediaStream] {
@@ -65,6 +119,6 @@ struct ProbedMediaFile: Codable, Equatable {
   }
 
   var attachmentStreams: [MediaStream] {
-    streams.filter { $0.kind == .attachment }
+    streams.filter { $0.kind == .attachment || $0.isAttachedPicture }
   }
 }

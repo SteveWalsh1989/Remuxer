@@ -42,7 +42,8 @@ struct OutputOptions: Codable, Equatable {
   var locationMode: OutputLocationMode = .besideSource
   var selectedFolderURL: URL?
   var collisionResolution: CollisionResolution = .autoRename
-  var removeSourceAfterSuccess = false
+  var extractSubtitleSidecars = false
+  var removeSourceAfterSuccess = true
 }
 
 struct OutputName: Equatable {

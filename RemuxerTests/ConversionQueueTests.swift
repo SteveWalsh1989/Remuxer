@@ -27,7 +27,7 @@ final class ConversionQueueTests: XCTestCase {
       queue.items.first?.status, .failed(ToolchainError.missingFFmpeg.localizedDescription))
   }
 
-  func testConversionRunsSubtitleAndPrimaryCommands() async {
+  func testConversionRunsPrimaryCommandByDefault() async {
     let executor = FakeExecutor()
     let outputPreparer = FakeOutputPreparer()
     let resourceAccess = FakeResourceAccess()
@@ -50,14 +50,32 @@ final class ConversionQueueTests: XCTestCase {
         paths.contains("/Movies/Movie.mkv") && paths.contains("/Movies")
       }
     )
+    XCTAssertEqual(executor.commands.count, 1)
+  }
+
+  func testRemoveSourceAfterSuccessIsEnabledByDefault() {
+    let queue = makeQueue()
+
+    XCTAssertTrue(queue.outputOptions.removeSourceAfterSuccess)
+  }
+
+  func testConversionRunsSubtitleCommandWhenSidecarsAreEnabled() async {
+    let executor = FakeExecutor()
+    let queue = makeQueue(executor: executor)
+    queue.outputOptions.extractSubtitleSidecars = true
+
+    queue.addFiles([URL(fileURLWithPath: "/Movies/Movie.mkv")])
+    await queue.startConversion()
+
+    XCTAssertEqual(queue.items.first?.status, .completed)
     XCTAssertEqual(executor.commands.count, 2)
+    XCTAssertEqual(executor.commands.first?.arguments.last, "/Movies/Movie.2.eng.srt")
   }
 
   func testConversionRemovesSourceAfterSuccessfulConversionWhenEnabled() async {
     let sourceFileCleaner = FakeSourceFileCleaner()
     let queue = makeQueue(sourceFileCleaner: sourceFileCleaner)
     let sourceURL = URL(fileURLWithPath: "/Movies/Movie.mkv")
-    queue.outputOptions.removeSourceAfterSuccess = true
 
     queue.addFiles([sourceURL])
     await queue.startConversion()
@@ -65,6 +83,18 @@ final class ConversionQueueTests: XCTestCase {
     XCTAssertEqual(queue.items.first?.status, .completed)
     XCTAssertEqual(sourceFileCleaner.removedURLs, [sourceURL])
     XCTAssertTrue(queue.items.first?.logLines.contains("Removed original file") == true)
+  }
+
+  func testConversionKeepsSourceWhenSourceRemovalIsDisabled() async {
+    let sourceFileCleaner = FakeSourceFileCleaner()
+    let queue = makeQueue(sourceFileCleaner: sourceFileCleaner)
+    queue.outputOptions.removeSourceAfterSuccess = false
+
+    queue.addFiles([URL(fileURLWithPath: "/Movies/Movie.mkv")])
+    await queue.startConversion()
+
+    XCTAssertEqual(queue.items.first?.status, .completed)
+    XCTAssertTrue(sourceFileCleaner.removedURLs.isEmpty)
   }
 
   func testConversionDoesNotRunCommandsWhenOutputPreparationFails() async {
@@ -76,7 +106,6 @@ final class ConversionQueueTests: XCTestCase {
       outputPreparer: outputPreparer,
       sourceFileCleaner: sourceFileCleaner
     )
-    queue.outputOptions.removeSourceAfterSuccess = true
 
     queue.addFiles([URL(fileURLWithPath: "/Movies/Movie.mkv")])
     await queue.startConversion()
@@ -89,7 +118,6 @@ final class ConversionQueueTests: XCTestCase {
   func testSourceRemovalFailureMarksCompletedConversionAsFailed() async {
     let sourceFileCleaner = FakeSourceFileCleaner(result: .failure(FakeSourceDeleteError.denied))
     let queue = makeQueue(sourceFileCleaner: sourceFileCleaner)
-    queue.outputOptions.removeSourceAfterSuccess = true
 
     queue.addFiles([URL(fileURLWithPath: "/Movies/Movie.mkv")])
     await queue.startConversion()
@@ -126,6 +154,53 @@ final class ConversionQueueTests: XCTestCase {
     queue.setCustomOutputName("Movie Export", for: itemID)
 
     XCTAssertEqual(queue.items.first?.plan?.output.videoURL.lastPathComponent, "Movie Export.mp4")
+  }
+
+  func testSubtitleSidecarOptionReplansAnalyzedItem() async {
+    let queue = makeQueue()
+
+    queue.addFiles([URL(fileURLWithPath: "/Movies/Movie.mkv")])
+    await queue.analyzeItems()
+
+    XCTAssertTrue(queue.items.first?.plan?.output.sidecarURLs.isEmpty == true)
+
+    queue.outputOptions.extractSubtitleSidecars = true
+
+    XCTAssertEqual(
+      queue.items.first?.plan?.output.sidecarURLs.first?.lastPathComponent,
+      "Movie.2.eng.srt"
+    )
+  }
+
+  func testClearCompletedRemovesOnlyCompletedItems() async throws {
+    let queue = makeQueue()
+    queue.addFiles([
+      URL(fileURLWithPath: "/Movies/Complete.mkv"),
+      URL(fileURLWithPath: "/Movies/Waiting.mkv"),
+    ])
+    let completedID = try XCTUnwrap(queue.items.first?.id)
+    let waitingID = try XCTUnwrap(queue.items.last?.id)
+
+    await queue.startConversion(with: [completedID])
+    queue.clearCompleted()
+
+    XCTAssertEqual(queue.items.map(\.id), [waitingID])
+  }
+
+  func testCanClearCompletedWhenAnyItemIsCompleted() async throws {
+    let queue = makeQueue()
+    queue.addFiles([
+      URL(fileURLWithPath: "/Movies/Complete.mkv"),
+      URL(fileURLWithPath: "/Movies/Waiting.mkv"),
+    ])
+    let completedID = try XCTUnwrap(queue.items.first?.id)
+
+    XCTAssertFalse(queue.canClearCompleted)
+
+    await queue.startConversion(with: [completedID])
+
+    XCTAssertEqual(queue.completedCount, 1)
+    XCTAssertTrue(queue.canClearCompleted)
   }
 
   func testOutputNameSequenceAppliesToFullQueueWhenSelectionIsEmpty() throws {
@@ -186,6 +261,7 @@ final class ConversionQueueTests: XCTestCase {
 
   func testOutputNameSequenceReplansAnalyzedItems() async throws {
     let queue = makeQueue()
+    queue.outputOptions.extractSubtitleSidecars = true
 
     queue.addFiles([URL(fileURLWithPath: "/Shows/Episode A.mkv")])
     await queue.analyzeItems()

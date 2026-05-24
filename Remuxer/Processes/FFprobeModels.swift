@@ -26,6 +26,7 @@ struct FFprobeStream: Decodable, Equatable {
   let height: Int?
   let channels: Int?
   let tags: [String: String]?
+  let disposition: [String: Int]?
 
   enum CodingKeys: String, CodingKey {
     case index
@@ -36,6 +37,7 @@ struct FFprobeStream: Decodable, Equatable {
     case height
     case channels
     case tags
+    case disposition
   }
 
   var mediaStream: MediaStream {
@@ -48,7 +50,8 @@ struct FFprobeStream: Decodable, Equatable {
       title: tags?["title"],
       width: width,
       height: height,
-      channelCount: channels
+      channelCount: channels,
+      isAttachedPicture: disposition?["attached_pic"] == 1
     )
   }
 }

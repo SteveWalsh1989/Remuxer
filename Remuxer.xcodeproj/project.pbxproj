@@ -32,7 +32,9 @@
 		BF0000000000000000000024 /* SourceFileCleaner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000024 /* SourceFileCleaner.swift */; };
 		BF0000000000000000000025 /* PlanDetailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000025 /* PlanDetailComponents.swift */; };
 		BF0000000000000000000026 /* ContentViewComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000026 /* ContentViewComponents.swift */; };
+		BF0000000000000000000027 /* QueueOptionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000027 /* QueueOptionsSection.swift */; };
 		BR0000000000000000000001 /* FFmpeg in Resources */ = {isa = PBXBuildFile; fileRef = R00000000000000000000001 /* FFmpeg */; };
+		BR0000000000000000000002 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = R00000000000000000000002 /* Assets.xcassets */; };
 		BT0000000000000000000001 /* CompatibilityRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000001 /* CompatibilityRulesTests.swift */; };
 		BT0000000000000000000002 /* ConversionPlannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000002 /* ConversionPlannerTests.swift */; };
 		BT0000000000000000000003 /* ConversionQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000003 /* ConversionQueueTests.swift */; };
@@ -57,6 +59,7 @@
 		PROD00000000000000000002 /* RemuxerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RemuxerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ENT000000000000000000001 /* Remuxer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Remuxer.entitlements; sourceTree = "<group>"; };
 		R00000000000000000000001 /* FFmpeg */ = {isa = PBXFileReference; lastKnownFileType = folder; path = FFmpeg; sourceTree = "<group>"; };
+		R00000000000000000000002 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F00000000000000000000001 /* RemuxerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemuxerApp.swift; sourceTree = "<group>"; };
 		F00000000000000000000002 /* ConversionPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionPlan.swift; sourceTree = "<group>"; };
 		F00000000000000000000003 /* ConversionPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionPreset.swift; sourceTree = "<group>"; };
@@ -82,6 +85,7 @@
 		F00000000000000000000024 /* SourceFileCleaner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceFileCleaner.swift; sourceTree = "<group>"; };
 		F00000000000000000000025 /* PlanDetailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanDetailComponents.swift; sourceTree = "<group>"; };
 		F00000000000000000000026 /* ContentViewComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewComponents.swift; sourceTree = "<group>"; };
+		F00000000000000000000027 /* QueueOptionsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueOptionsSection.swift; sourceTree = "<group>"; };
 		T00000000000000000000001 /* CompatibilityRulesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompatibilityRulesTests.swift; sourceTree = "<group>"; };
 		T00000000000000000000002 /* ConversionPlannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionPlannerTests.swift; sourceTree = "<group>"; };
 		T00000000000000000000003 /* ConversionQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionQueueTests.swift; sourceTree = "<group>"; };
@@ -213,6 +217,7 @@
 				F00000000000000000000025 /* PlanDetailComponents.swift */,
 				F00000000000000000000018 /* PlanDetailView.swift */,
 				F00000000000000000000020 /* QueueListView.swift */,
+				F00000000000000000000027 /* QueueOptionsSection.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -250,6 +255,7 @@
 		GRP000000000000000000014 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				R00000000000000000000002 /* Assets.xcassets */,
 				R00000000000000000000001 /* FFmpeg */,
 			);
 			path = Resources;
@@ -337,6 +343,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BR0000000000000000000001 /* FFmpeg in Resources */,
+				BR0000000000000000000002 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,6 +386,7 @@
 				BF0000000000000000000024 /* SourceFileCleaner.swift in Sources */,
 				BF0000000000000000000025 /* PlanDetailComponents.swift in Sources */,
 				BF0000000000000000000026 /* ContentViewComponents.swift in Sources */,
+				BF0000000000000000000027 /* QueueOptionsSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -525,6 +533,7 @@
 		CFGT000000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Remuxer/Remuxer.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
@@ -547,6 +556,7 @@
 		CFGT000000000000000004 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Remuxer/Remuxer.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;

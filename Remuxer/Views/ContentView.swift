@@ -10,14 +10,13 @@ struct ContentView: View {
 
   @State private var selectedItemIDs: Set<QueueItem.ID> = []
   @State private var isDropTargeted = false
-  @State private var isBatchRenameSheetPresented = false
+  @State private var seriesNaming = SeriesOutputNamingPreference()
 
   var body: some View {
     NavigationSplitView {
       QueueListView(
         queue: queue,
-        selectedItemIDs: $selectedItemIDs,
-        isDeveloperModeEnabled: $isDeveloperModeEnabled
+        selectedItemIDs: $selectedItemIDs
       )
       .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
     } detail: {
@@ -25,13 +24,6 @@ struct ContentView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     .toolbar { toolbarContent }
-    .sheet(isPresented: $isBatchRenameSheetPresented) {
-      OutputNameSequenceSheet(
-        targetItems: batchRenameTargetItems,
-        isWorking: queue.isWorking,
-        apply: applyOutputNameSequence
-      )
-    }
     .onDrop(
       of: [UTType.fileURL.identifier],
       isTargeted: $isDropTargeted,
@@ -56,49 +48,54 @@ extension ContentView {
   private var toolbarContent: some ToolbarContent {
     ToolbarItemGroup {
       if queue.items.isEmpty == false {
-        Button {
+        IconOnlyButton(
+          title: "Add Files",
+          systemImage: "plus",
+          help: "Add MKV files to the conversion queue."
+        ) {
           presentSourceFilePicker()
-        } label: {
-          Label("Add Files", systemImage: "plus")
         }
         .keyboardShortcut("o", modifiers: .command)
-        .help("Add MKV files to the conversion queue.")
       }
 
       presetMenu
       outputMenu
 
-      Button {
-        Task { await queue.analyzeItems(with: selectedItemIDs) }
-      } label: {
-        Label("Analyze", systemImage: "waveform.path.ecg")
+      IconOnlyButton(
+        title: "Analyze",
+        systemImage: "waveform.path.ecg",
+        help: "Analyze all queued files and build conversion plans."
+      ) {
+        Task { await queue.analyzeItems() }
       }
       .disabled(queue.items.isEmpty || queue.isWorking)
-      .help("Analyze queued files and build conversion plans.")
 
-      Button {
-        Task { await queue.startConversion(with: selectedItemIDs) }
-      } label: {
-        Label("Start", systemImage: "play.fill")
+      IconOnlyButton(
+        title: "Start",
+        systemImage: "play.fill",
+        help: "Start converting all ready files in the queue."
+      ) {
+        Task { await startQueueConversion() }
       }
-      .disabled(queue.items.isEmpty || queue.isWorking)
-      .help("Start converting ready files.")
+      .disabled(canStartConversion == false)
 
-      Button {
+      IconOnlyButton(
+        title: "Cancel",
+        systemImage: "stop.fill",
+        help: "Cancel the active conversion."
+      ) {
         queue.cancelActiveConversion()
-      } label: {
-        Label("Cancel", systemImage: "stop.fill")
       }
       .disabled(queue.isWorking == false)
-      .help("Cancel the active conversion.")
 
-      Button {
+      IconOnlyButton(
+        title: "Clear Completed",
+        systemImage: "checkmark.circle",
+        help: "Remove completed files from the queue."
+      ) {
         queue.clearCompleted()
-      } label: {
-        Label("Clear Completed", systemImage: "checkmark.circle")
       }
-      .disabled(queue.completedCount == 0 || queue.isWorking)
-      .help("Remove completed files from the queue.")
+      .disabled(queue.canClearCompleted == false)
     }
   }
 
@@ -120,7 +117,7 @@ extension ContentView {
     } label: {
       Label(queue.defaultPreset.displayName, systemImage: "slider.horizontal.3")
     }
-    .help("Choose the default conversion preset.")
+    .iconControlTooltip("Choose the default conversion preset.")
   }
 
   private var outputMenu: some View {
@@ -166,11 +163,6 @@ extension ContentView {
         }
       }
 
-      Button(batchRenameTitle) {
-        isBatchRenameSheetPresented = true
-      }
-      .disabled(queue.items.isEmpty || queue.isWorking)
-
       Divider()
 
       Picker("Collisions", selection: $queue.outputOptions.collisionResolution) {
@@ -180,10 +172,6 @@ extension ContentView {
       }
       .pickerStyle(.inline)
 
-      Toggle(isOn: $queue.outputOptions.removeSourceAfterSuccess) {
-        Label("Remove Originals After Success", systemImage: "trash")
-      }
-
       Button("Save Current Location") {
         queue.saveSelectedDestination()
       }
@@ -191,7 +179,7 @@ extension ContentView {
     } label: {
       Label("Output", systemImage: "folder")
     }
-    .help("Choose where converted files are saved.")
+    .iconControlTooltip("Choose where converted files are saved.")
     .disabled(queue.isWorking)
   }
 
@@ -209,7 +197,12 @@ extension ContentView {
         outputName: selectedOutputNameBinding,
         resetOutputName: resetSelectedOutputName,
         toolchainErrorMessage: queue.toolchainErrorMessage,
-        removesSourceAfterSuccess: queue.outputOptions.removeSourceAfterSuccess,
+        queueItems: queue.items,
+        selectedItemIDs: selectedItemIDs,
+        seriesNaming: $seriesNaming,
+        extractsSubtitleSidecars: $queue.outputOptions.extractSubtitleSidecars,
+        removesSourceAfterSuccess: $queue.outputOptions.removeSourceAfterSuccess,
+        isWorking: queue.isWorking,
         isDeveloperModeEnabled: isDeveloperModeEnabled
       )
     }
@@ -253,16 +246,14 @@ extension ContentView {
     selectedItemIDs.isEmpty ? "Apply Preset to Queue" : "Apply Preset to Selection"
   }
 
-  private var batchRenameTitle: String {
-    selectedItemIDs.isEmpty ? "Batch Rename Queue..." : "Batch Rename Selection..."
+  private var canStartConversion: Bool {
+    queue.items.isEmpty == false
+      && queue.isWorking == false
+      && (shouldApplySeriesNaming == false || seriesNaming.sequence != nil)
   }
 
-  private var batchRenameTargetItems: [QueueItem] {
-    guard selectedItemIDs.isEmpty == false else {
-      return queue.items
-    }
-
-    return queue.items.filter { selectedItemIDs.contains($0.id) }
+  private var shouldApplySeriesNaming: Bool {
+    queue.items.count > 1 && seriesNaming.isEnabled
   }
 
   private func resetSelectedOutputName() {
@@ -273,12 +264,28 @@ extension ContentView {
     queue.resetCustomOutputNames(for: [selectedID])
   }
 
-  private func applyOutputNameSequence(prefix: String, startNumberText: String) throws {
-    try queue.applyOutputNameSequence(
-      prefix: prefix,
-      startNumberText: startNumberText,
-      to: selectedItemIDs
-    )
+  @MainActor
+  private func startQueueConversion() async {
+    seriesNaming.errorMessage = nil
+
+    if shouldApplySeriesNaming {
+      do {
+        try queue.applyOutputNameSequence(
+          prefix: seriesNaming.prefix,
+          startNumberText: seriesNaming.startNumberText,
+          to: batchRenameTargetIDs
+        )
+      } catch {
+        seriesNaming.errorMessage = error.localizedDescription
+        return
+      }
+    }
+
+    await queue.startConversion()
+  }
+
+  private var batchRenameTargetIDs: Set<QueueItem.ID> {
+    selectedItemIDs.count > 1 ? selectedItemIDs : []
   }
 
   private func addSourceFiles(_ urls: [URL]) {
