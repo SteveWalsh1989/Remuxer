@@ -15,6 +15,7 @@ struct ContentView: View {
         QueueControlBar(
           queue: queue,
           selectedItemIDs: selectedItemIDs,
+          addFiles: { isFileImporterPresented = true },
           chooseFolder: { isFolderImporterPresented = true }
         )
 
@@ -22,23 +23,39 @@ struct ContentView: View {
 
         QueueListView(
           queue: queue,
-          selectedItemIDs: $selectedItemIDs
+          selectedItemIDs: $selectedItemIDs,
+          isDropTargeted: isDropTargeted,
+          addFiles: { isFileImporterPresented = true }
         )
       }
-      .frame(minWidth: 680)
+      .frame(
+        minWidth: 720,
+        idealWidth: 820,
+        maxWidth: .infinity,
+        maxHeight: .infinity,
+        alignment: .top
+      )
 
       Divider()
 
       PlanDetailView(item: selectedDetailItem)
-        .frame(minWidth: 340, idealWidth: 390, maxWidth: 460)
+        .frame(
+          minWidth: 340,
+          idealWidth: 390,
+          maxWidth: 460,
+          maxHeight: .infinity,
+          alignment: .top
+        )
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     .toolbar {
       ToolbarItemGroup {
         Button {
           isFileImporterPresented = true
         } label: {
-          Label("Add Files", systemImage: "plus")
+          Label("Add MKV Files", systemImage: "plus")
         }
+        .keyboardShortcut("o", modifiers: .command)
         .help("Add MKV Files")
 
         Button {
@@ -98,6 +115,7 @@ struct ContentView: View {
         RoundedRectangle(cornerRadius: 8)
           .stroke(Color.accentColor, lineWidth: 2)
           .padding(18)
+          .allowsHitTesting(false)
       }
     }
     .onOpenURL { url in

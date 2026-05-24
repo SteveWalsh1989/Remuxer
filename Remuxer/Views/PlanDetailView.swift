@@ -14,13 +14,23 @@ struct PlanDetailView: View {
           if let item {
             itemDetails(item)
           } else {
-            Text("Select a queued item to inspect its plan and logs.")
-              .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 6) {
+              Label("No File Selected", systemImage: "doc.text.magnifyingglass")
+                .font(.headline)
+
+              Text("Plans, warnings, blockers, commands, and logs appear here.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            }
           }
         }
         .padding(16)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
       }
+      .frame(maxHeight: .infinity, alignment: .top)
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
   }
 
   private var header: some View {

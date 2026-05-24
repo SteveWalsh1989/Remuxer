@@ -3,6 +3,8 @@ import SwiftUI
 struct QueueListView: View {
   @ObservedObject var queue: ConversionQueue
   @Binding var selectedItemIDs: Set<QueueItem.ID>
+  let isDropTargeted: Bool
+  let addFiles: () -> Void
 
   var body: some View {
     List(selection: $selectedItemIDs) {
@@ -40,9 +42,14 @@ struct QueueListView: View {
         }
       }
     }
+    .listStyle(.inset)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .overlay {
       if queue.items.isEmpty {
-        EmptyQueueView()
+        EmptyQueueView(
+          isDropTargeted: isDropTargeted,
+          addFiles: addFiles
+        )
       }
     }
   }
@@ -119,6 +126,7 @@ private struct QueueItemRow: View {
       .foregroundStyle(.secondary)
     }
     .padding(.vertical, 6)
+    .listRowInsets(EdgeInsets(top: 8, leading: 14, bottom: 8, trailing: 14))
   }
 }
 
@@ -153,20 +161,43 @@ private struct StatusBadge: View {
 }
 
 private struct EmptyQueueView: View {
+  let isDropTargeted: Bool
+  let addFiles: () -> Void
+
   var body: some View {
-    VStack(spacing: 12) {
-      Image(systemName: "tray.and.arrow.down")
-        .font(.system(size: 42, weight: .light))
-        .foregroundStyle(.secondary)
+    VStack(spacing: 18) {
+      Image(systemName: "film.stack")
+        .font(.system(size: 44, weight: .light))
+        .foregroundStyle(isDropTargeted ? Color.accentColor : Color.secondary)
 
-      VStack(spacing: 4) {
+      VStack(spacing: 5) {
         Text("Drop MKV files here")
-          .font(.headline)
+          .font(.title3.weight(.semibold))
 
-        Text("Add one file or a batch from Finder to build a conversion queue.")
+        Text("Plans, warnings, and blockers appear before conversion starts.")
           .font(.callout)
           .foregroundStyle(.secondary)
+          .multilineTextAlignment(.center)
       }
+
+      Button {
+        addFiles()
+      } label: {
+        Label("Add MKV Files...", systemImage: "plus")
+      }
+      .buttonStyle(.borderedProminent)
     }
+    .padding(28)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .overlay {
+      RoundedRectangle(cornerRadius: 8, style: .continuous)
+        .strokeBorder(
+          isDropTargeted ? Color.accentColor : Color.secondary.opacity(0.28),
+          style: StrokeStyle(lineWidth: isDropTargeted ? 2 : 1, dash: [7, 6])
+        )
+        .allowsHitTesting(false)
+    }
+    .padding(28)
   }
 }

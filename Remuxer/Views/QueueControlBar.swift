@@ -3,10 +3,55 @@ import SwiftUI
 struct QueueControlBar: View {
   @ObservedObject var queue: ConversionQueue
   let selectedItemIDs: Set<QueueItem.ID>
+  let addFiles: () -> Void
   let chooseFolder: () -> Void
 
   var body: some View {
-    VStack(spacing: 10) {
+    VStack(alignment: .leading, spacing: 12) {
+      HStack(alignment: .center, spacing: 12) {
+        VStack(alignment: .leading, spacing: 3) {
+          Text("Queue")
+            .font(.headline)
+
+          Text(queueSummary)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
+
+        Spacer(minLength: 20)
+
+        Button {
+          addFiles()
+        } label: {
+          Label("Add MKV Files...", systemImage: "plus")
+        }
+        .buttonStyle(.bordered)
+        .disabled(queue.isWorking)
+
+        Button {
+          Task { await queue.analyzeItems(with: selectedItemIDs) }
+        } label: {
+          Label("Analyze", systemImage: "waveform.path.ecg")
+        }
+        .disabled(queue.items.isEmpty || queue.isWorking)
+
+        Button {
+          Task { await queue.startConversion(with: selectedItemIDs) }
+        } label: {
+          Label("Start", systemImage: "play.fill")
+        }
+        .buttonStyle(.borderedProminent)
+        .disabled(queue.items.isEmpty || queue.isWorking)
+
+        Button {
+          queue.cancelActiveConversion()
+        } label: {
+          Label("Cancel", systemImage: "stop.fill")
+        }
+        .disabled(queue.isWorking == false)
+      }
+
       HStack(spacing: 12) {
         Picker("Preset", selection: $queue.defaultPreset) {
           ForEach(ConversionPreset.allCases) { preset in
@@ -110,6 +155,22 @@ struct QueueControlBar: View {
     }
     .padding(.horizontal, 14)
     .padding(.vertical, 12)
+  }
+
+  private var queueSummary: String {
+    if queue.items.isEmpty {
+      return "No source files added"
+    }
+
+    if selectedItemIDs.isEmpty {
+      return "\(queue.items.count) queued, \(stateSummary)"
+    }
+
+    return "\(selectedItemIDs.count) selected, \(stateSummary)"
+  }
+
+  private var stateSummary: String {
+    "\(queue.readyCount) ready, \(queue.completedCount) done"
   }
 
   private var applyPresetTitle: String {
