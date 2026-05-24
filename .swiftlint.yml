@@ -1,0 +1,34 @@
+included:
+  - Remuxer
+  - RemuxerTests
+
+disabled_rules:
+  - trailing_comma
+  - opening_brace
+
+line_length:
+  warning: 120
+  error: 150
+
+identifier_name:
+  min_length:
+    warning: 2
+
+type_name:
+  min_length: 3
+
+function_body_length:
+  warning: 80
+  error: 120
+
+function_parameter_count:
+  warning: 6
+  error: 8
+
+type_body_length:
+  warning: 320
+  error: 400
+
+file_length:
+  warning: 500
+  error: 800

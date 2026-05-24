@@ -1,0 +1,608 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		BF0000000000000000000001 /* RemuxerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000001 /* RemuxerApp.swift */; };
+		BF0000000000000000000002 /* ConversionPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000002 /* ConversionPlan.swift */; };
+		BF0000000000000000000003 /* ConversionPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000003 /* ConversionPreset.swift */; };
+		BF0000000000000000000004 /* MediaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000004 /* MediaModels.swift */; };
+		BF0000000000000000000005 /* OutputOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000005 /* OutputOptions.swift */; };
+		BF0000000000000000000006 /* QueueModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000006 /* QueueModels.swift */; };
+		BF0000000000000000000007 /* OutputPathResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000007 /* OutputPathResolver.swift */; };
+		BF0000000000000000000008 /* CompatibilityRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000008 /* CompatibilityRules.swift */; };
+		BF0000000000000000000009 /* ConversionPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000009 /* ConversionPlanner.swift */; };
+		BF0000000000000000000010 /* FFmpegClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000010 /* FFmpegClient.swift */; };
+		BF0000000000000000000011 /* FFprobeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000011 /* FFprobeClient.swift */; };
+		BF0000000000000000000012 /* FFprobeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000012 /* FFprobeModels.swift */; };
+		BF0000000000000000000013 /* Toolchain.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000013 /* Toolchain.swift */; };
+		BF0000000000000000000014 /* ConversionQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000014 /* ConversionQueue.swift */; };
+		BF0000000000000000000015 /* QueueFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000015 /* QueueFormatters.swift */; };
+		BF0000000000000000000016 /* SupportedInputFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000016 /* SupportedInputFile.swift */; };
+		BF0000000000000000000017 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000017 /* ContentView.swift */; };
+		BF0000000000000000000018 /* PlanDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000018 /* PlanDetailView.swift */; };
+		BF0000000000000000000019 /* QueueControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000019 /* QueueControlBar.swift */; };
+		BF0000000000000000000020 /* QueueListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000020 /* QueueListView.swift */; };
+		BF0000000000000000000021 /* DestinationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000021 /* DestinationStore.swift */; };
+		BF0000000000000000000022 /* OutputPreparer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000022 /* OutputPreparer.swift */; };
+		BT0000000000000000000001 /* CompatibilityRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000001 /* CompatibilityRulesTests.swift */; };
+		BT0000000000000000000002 /* ConversionPlannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000002 /* ConversionPlannerTests.swift */; };
+		BT0000000000000000000003 /* ConversionQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000003 /* ConversionQueueTests.swift */; };
+		BT0000000000000000000004 /* FFprobeDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000004 /* FFprobeDecodingTests.swift */; };
+		BT0000000000000000000005 /* OutputPathResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000005 /* OutputPathResolverTests.swift */; };
+		BT0000000000000000000006 /* ToolchainDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000006 /* ToolchainDetectorTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		PXY000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = PROJ00000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = TARGET000000000000000001;
+			remoteInfo = Remuxer;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		PROD00000000000000000001 /* Remuxer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Remuxer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		PROD00000000000000000002 /* RemuxerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RemuxerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		ENT000000000000000000001 /* Remuxer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Remuxer.entitlements; sourceTree = "<group>"; };
+		F00000000000000000000001 /* RemuxerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemuxerApp.swift; sourceTree = "<group>"; };
+		F00000000000000000000002 /* ConversionPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionPlan.swift; sourceTree = "<group>"; };
+		F00000000000000000000003 /* ConversionPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionPreset.swift; sourceTree = "<group>"; };
+		F00000000000000000000004 /* MediaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaModels.swift; sourceTree = "<group>"; };
+		F00000000000000000000005 /* OutputOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputOptions.swift; sourceTree = "<group>"; };
+		F00000000000000000000006 /* QueueModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueModels.swift; sourceTree = "<group>"; };
+		F00000000000000000000007 /* OutputPathResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputPathResolver.swift; sourceTree = "<group>"; };
+		F00000000000000000000008 /* CompatibilityRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompatibilityRules.swift; sourceTree = "<group>"; };
+		F00000000000000000000009 /* ConversionPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionPlanner.swift; sourceTree = "<group>"; };
+		F00000000000000000000010 /* FFmpegClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FFmpegClient.swift; sourceTree = "<group>"; };
+		F00000000000000000000011 /* FFprobeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FFprobeClient.swift; sourceTree = "<group>"; };
+		F00000000000000000000012 /* FFprobeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FFprobeModels.swift; sourceTree = "<group>"; };
+		F00000000000000000000013 /* Toolchain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toolchain.swift; sourceTree = "<group>"; };
+		F00000000000000000000014 /* ConversionQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionQueue.swift; sourceTree = "<group>"; };
+		F00000000000000000000015 /* QueueFormatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueFormatters.swift; sourceTree = "<group>"; };
+		F00000000000000000000016 /* SupportedInputFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedInputFile.swift; sourceTree = "<group>"; };
+		F00000000000000000000017 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		F00000000000000000000018 /* PlanDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanDetailView.swift; sourceTree = "<group>"; };
+		F00000000000000000000019 /* QueueControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueControlBar.swift; sourceTree = "<group>"; };
+		F00000000000000000000020 /* QueueListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueListView.swift; sourceTree = "<group>"; };
+		F00000000000000000000021 /* DestinationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationStore.swift; sourceTree = "<group>"; };
+		F00000000000000000000022 /* OutputPreparer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputPreparer.swift; sourceTree = "<group>"; };
+		T00000000000000000000001 /* CompatibilityRulesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompatibilityRulesTests.swift; sourceTree = "<group>"; };
+		T00000000000000000000002 /* ConversionPlannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionPlannerTests.swift; sourceTree = "<group>"; };
+		T00000000000000000000003 /* ConversionQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionQueueTests.swift; sourceTree = "<group>"; };
+		T00000000000000000000004 /* FFprobeDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FFprobeDecodingTests.swift; sourceTree = "<group>"; };
+		T00000000000000000000005 /* OutputPathResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputPathResolverTests.swift; sourceTree = "<group>"; };
+		T00000000000000000000006 /* ToolchainDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolchainDetectorTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FRM000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FRM000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		GRP000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				GRP000000000000000000002 /* Remuxer */,
+				GRP000000000000000000012 /* RemuxerTests */,
+				GRP000000000000000000013 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		GRP000000000000000000002 /* Remuxer */ = {
+			isa = PBXGroup;
+			children = (
+				GRP000000000000000000003 /* App */,
+				GRP000000000000000000004 /* Domain */,
+				GRP000000000000000000005 /* Filesystem */,
+				GRP000000000000000000006 /* Planning */,
+				GRP000000000000000000007 /* Processes */,
+				GRP000000000000000000008 /* Queue */,
+				GRP000000000000000000009 /* Support */,
+				GRP000000000000000000010 /* Views */,
+				GRP000000000000000000011 /* ViewModels */,
+				ENT000000000000000000001 /* Remuxer.entitlements */,
+			);
+			path = Remuxer;
+			sourceTree = "<group>";
+		};
+		GRP000000000000000000003 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				F00000000000000000000001 /* RemuxerApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		GRP000000000000000000004 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				F00000000000000000000002 /* ConversionPlan.swift */,
+				F00000000000000000000003 /* ConversionPreset.swift */,
+				F00000000000000000000004 /* MediaModels.swift */,
+				F00000000000000000000005 /* OutputOptions.swift */,
+				F00000000000000000000006 /* QueueModels.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		GRP000000000000000000005 /* Filesystem */ = {
+			isa = PBXGroup;
+			children = (
+				F00000000000000000000022 /* OutputPreparer.swift */,
+				F00000000000000000000007 /* OutputPathResolver.swift */,
+			);
+			path = Filesystem;
+			sourceTree = "<group>";
+		};
+		GRP000000000000000000006 /* Planning */ = {
+			isa = PBXGroup;
+			children = (
+				F00000000000000000000008 /* CompatibilityRules.swift */,
+				F00000000000000000000009 /* ConversionPlanner.swift */,
+			);
+			path = Planning;
+			sourceTree = "<group>";
+		};
+		GRP000000000000000000007 /* Processes */ = {
+			isa = PBXGroup;
+			children = (
+				F00000000000000000000010 /* FFmpegClient.swift */,
+				F00000000000000000000011 /* FFprobeClient.swift */,
+				F00000000000000000000012 /* FFprobeModels.swift */,
+				F00000000000000000000013 /* Toolchain.swift */,
+			);
+			path = Processes;
+			sourceTree = "<group>";
+		};
+		GRP000000000000000000008 /* Queue */ = {
+			isa = PBXGroup;
+			children = (
+				F00000000000000000000014 /* ConversionQueue.swift */,
+			);
+			path = Queue;
+			sourceTree = "<group>";
+		};
+		GRP000000000000000000009 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				F00000000000000000000021 /* DestinationStore.swift */,
+				F00000000000000000000015 /* QueueFormatters.swift */,
+				F00000000000000000000016 /* SupportedInputFile.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		GRP000000000000000000010 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				F00000000000000000000017 /* ContentView.swift */,
+				F00000000000000000000018 /* PlanDetailView.swift */,
+				F00000000000000000000019 /* QueueControlBar.swift */,
+				F00000000000000000000020 /* QueueListView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		GRP000000000000000000011 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		GRP000000000000000000012 /* RemuxerTests */ = {
+			isa = PBXGroup;
+			children = (
+				T00000000000000000000001 /* CompatibilityRulesTests.swift */,
+				T00000000000000000000002 /* ConversionPlannerTests.swift */,
+				T00000000000000000000003 /* ConversionQueueTests.swift */,
+				T00000000000000000000004 /* FFprobeDecodingTests.swift */,
+				T00000000000000000000005 /* OutputPathResolverTests.swift */,
+				T00000000000000000000006 /* ToolchainDetectorTests.swift */,
+			);
+			path = RemuxerTests;
+			sourceTree = "<group>";
+		};
+		GRP000000000000000000013 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				PROD00000000000000000001 /* Remuxer.app */,
+				PROD00000000000000000002 /* RemuxerTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		TARGET000000000000000001 /* Remuxer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CFGT000000000000000001 /* Build configuration list for PBXNativeTarget "Remuxer" */;
+			buildPhases = (
+				SRC000000000000000000001 /* Sources */,
+				FRM000000000000000000001 /* Frameworks */,
+				RES000000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Remuxer;
+			productName = Remuxer;
+			productReference = PROD00000000000000000001 /* Remuxer.app */;
+			productType = "com.apple.product-type.application";
+		};
+		TARGET000000000000000002 /* RemuxerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CFGT000000000000000002 /* Build configuration list for PBXNativeTarget "RemuxerTests" */;
+			buildPhases = (
+				SRC000000000000000000002 /* Sources */,
+				FRM000000000000000000002 /* Frameworks */,
+				RES000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DEP000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = RemuxerTests;
+			productName = RemuxerTests;
+			productReference = PROD00000000000000000002 /* RemuxerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		PROJ00000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2620;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					TARGET000000000000000001 = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					TARGET000000000000000002 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = TARGET000000000000000001;
+					};
+				};
+			};
+			buildConfigurationList = CFGP000000000000000001 /* Build configuration list for PBXProject "Remuxer" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = GRP000000000000000000001;
+			productRefGroup = GRP000000000000000000013 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				TARGET000000000000000001 /* Remuxer */,
+				TARGET000000000000000002 /* RemuxerTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		RES000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		RES000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		SRC000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BF0000000000000000000001 /* RemuxerApp.swift in Sources */,
+				BF0000000000000000000002 /* ConversionPlan.swift in Sources */,
+				BF0000000000000000000003 /* ConversionPreset.swift in Sources */,
+				BF0000000000000000000004 /* MediaModels.swift in Sources */,
+				BF0000000000000000000005 /* OutputOptions.swift in Sources */,
+				BF0000000000000000000006 /* QueueModels.swift in Sources */,
+				BF0000000000000000000007 /* OutputPathResolver.swift in Sources */,
+				BF0000000000000000000008 /* CompatibilityRules.swift in Sources */,
+				BF0000000000000000000009 /* ConversionPlanner.swift in Sources */,
+				BF0000000000000000000010 /* FFmpegClient.swift in Sources */,
+				BF0000000000000000000011 /* FFprobeClient.swift in Sources */,
+				BF0000000000000000000012 /* FFprobeModels.swift in Sources */,
+				BF0000000000000000000013 /* Toolchain.swift in Sources */,
+				BF0000000000000000000014 /* ConversionQueue.swift in Sources */,
+				BF0000000000000000000015 /* QueueFormatters.swift in Sources */,
+				BF0000000000000000000016 /* SupportedInputFile.swift in Sources */,
+				BF0000000000000000000017 /* ContentView.swift in Sources */,
+				BF0000000000000000000018 /* PlanDetailView.swift in Sources */,
+				BF0000000000000000000019 /* QueueControlBar.swift in Sources */,
+				BF0000000000000000000020 /* QueueListView.swift in Sources */,
+				BF0000000000000000000021 /* DestinationStore.swift in Sources */,
+				BF0000000000000000000022 /* OutputPreparer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		SRC000000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BT0000000000000000000001 /* CompatibilityRulesTests.swift in Sources */,
+				BT0000000000000000000002 /* ConversionPlannerTests.swift in Sources */,
+				BT0000000000000000000003 /* ConversionQueueTests.swift in Sources */,
+				BT0000000000000000000004 /* FFprobeDecodingTests.swift in Sources */,
+				BT0000000000000000000005 /* OutputPathResolverTests.swift in Sources */,
+				BT0000000000000000000006 /* ToolchainDetectorTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DEP000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = TARGET000000000000000001 /* Remuxer */;
+			targetProxy = PXY000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		CFGP000000000000000002 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CFGP000000000000000003 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CFGT000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Remuxer/Remuxer.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Remuxer;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stevewalsh.Remuxer;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		CFGT000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Remuxer/Remuxer.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Remuxer;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stevewalsh.Remuxer;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		CFGT000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stevewalsh.RemuxerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Remuxer.app/Contents/MacOS/Remuxer";
+			};
+			name = Debug;
+		};
+		CFGT000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stevewalsh.RemuxerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Remuxer.app/Contents/MacOS/Remuxer";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CFGP000000000000000001 /* Build configuration list for PBXProject "Remuxer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CFGP000000000000000002 /* Debug */,
+				CFGP000000000000000003 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CFGT000000000000000001 /* Build configuration list for PBXNativeTarget "Remuxer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CFGT000000000000000003 /* Debug */,
+				CFGT000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CFGT000000000000000002 /* Build configuration list for PBXNativeTarget "RemuxerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CFGT000000000000000005 /* Debug */,
+				CFGT000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = PROJ00000000000000000001 /* Project object */;
+}

@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Xcode
+DerivedData/
+.derivedData/
+build/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Local app output
+dist/
+*.app.dSYM/
+
+# Local planning notes
+docs/planning/
+
+# Local environment overrides
+.env
+.env.*
+!.env.example
