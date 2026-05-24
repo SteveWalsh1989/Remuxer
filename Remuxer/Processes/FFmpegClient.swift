@@ -28,10 +28,15 @@ enum ProcessExecutionError: LocalizedError, Equatable {
 @MainActor
 final class FFmpegClient: ConversionExecuting {
   private let toolLocator: ToolLocating
-  private var activeProcess: Process?
+  private let processRunner: ExternalProcessRunning
 
-  init(toolLocator: ToolLocating) {
+  convenience init(toolLocator: ToolLocating) {
+    self.init(toolLocator: toolLocator, processRunner: ProcessCommandRunner())
+  }
+
+  init(toolLocator: ToolLocating, processRunner: ExternalProcessRunning) {
     self.toolLocator = toolLocator
+    self.processRunner = processRunner
   }
 
   func run(
@@ -43,13 +48,59 @@ final class FFmpegClient: ConversionExecuting {
     let toolchain = try toolLocator.locateToolchain()
     let executableURL = executableURL(for: command.executableName, in: toolchain)
 
+    try await processRunner.run(
+      executableURL: executableURL,
+      arguments: command.arguments,
+      duration: duration,
+      progress: progress,
+      log: log
+    )
+  }
+
+  func cancel() {
+    processRunner.cancel()
+  }
+
+  private func executableURL(for executableName: String, in toolchain: FFmpegToolchain) -> URL {
+    switch executableName {
+    case "ffprobe":
+      toolchain.ffprobeURL
+    default:
+      toolchain.ffmpegURL
+    }
+  }
+}
+
+@MainActor
+protocol ExternalProcessRunning: AnyObject {
+  func run(
+    executableURL: URL,
+    arguments: [String],
+    duration: TimeInterval?,
+    progress: @escaping @Sendable (Double) -> Void,
+    log: @escaping @Sendable (String) -> Void
+  ) async throws
+  func cancel()
+}
+
+@MainActor
+final class ProcessCommandRunner: ExternalProcessRunning {
+  private var activeProcess: Process?
+
+  func run(
+    executableURL: URL,
+    arguments: [String],
+    duration: TimeInterval?,
+    progress: @escaping @Sendable (Double) -> Void,
+    log: @escaping @Sendable (String) -> Void
+  ) async throws {
     try await withCheckedThrowingContinuation { continuation in
       let process = Process()
       let standardError = Pipe()
       let outputBuffer = ProcessOutputBuffer()
 
       process.executableURL = executableURL
-      process.arguments = command.arguments
+      process.arguments = arguments
       process.standardError = standardError
       activeProcess = process
 
@@ -114,15 +165,6 @@ final class FFmpegClient: ConversionExecuting {
 
   func cancel() {
     activeProcess?.terminate()
-  }
-
-  private func executableURL(for executableName: String, in toolchain: FFmpegToolchain) -> URL {
-    switch executableName {
-    case "ffprobe":
-      toolchain.ffprobeURL
-    default:
-      toolchain.ffmpegURL
-    }
   }
 }
 

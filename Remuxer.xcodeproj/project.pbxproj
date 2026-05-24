@@ -36,6 +36,7 @@
 		BT0000000000000000000004 /* FFprobeDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000004 /* FFprobeDecodingTests.swift */; };
 		BT0000000000000000000005 /* OutputPathResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000005 /* OutputPathResolverTests.swift */; };
 		BT0000000000000000000006 /* ToolchainDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000006 /* ToolchainDetectorTests.swift */; };
+		BT0000000000000000000007 /* FFmpegClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000007 /* FFmpegClientTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,6 +82,7 @@
 		T00000000000000000000004 /* FFprobeDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FFprobeDecodingTests.swift; sourceTree = "<group>"; };
 		T00000000000000000000005 /* OutputPathResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputPathResolverTests.swift; sourceTree = "<group>"; };
 		T00000000000000000000006 /* ToolchainDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolchainDetectorTests.swift; sourceTree = "<group>"; };
+		T00000000000000000000007 /* FFmpegClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FFmpegClientTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -219,6 +221,7 @@
 				T00000000000000000000001 /* CompatibilityRulesTests.swift */,
 				T00000000000000000000002 /* ConversionPlannerTests.swift */,
 				T00000000000000000000003 /* ConversionQueueTests.swift */,
+				T00000000000000000000007 /* FFmpegClientTests.swift */,
 				T00000000000000000000004 /* FFprobeDecodingTests.swift */,
 				T00000000000000000000005 /* OutputPathResolverTests.swift */,
 				T00000000000000000000006 /* ToolchainDetectorTests.swift */,
@@ -369,6 +372,7 @@
 				BT0000000000000000000004 /* FFprobeDecodingTests.swift in Sources */,
 				BT0000000000000000000005 /* OutputPathResolverTests.swift in Sources */,
 				BT0000000000000000000006 /* ToolchainDetectorTests.swift in Sources */,
+				BT0000000000000000000007 /* FFmpegClientTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
