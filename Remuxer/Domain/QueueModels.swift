@@ -82,23 +82,21 @@ struct QueueItem: Identifiable, Equatable {
     sourceURL.deletingPathExtension().lastPathComponent
   }
 
-  var issueSummary: String {
-    if planningErrorMessage != nil {
-      return "Output issue"
+  var blockingIssueMessages: [String] {
+    var messages: [String] = []
+
+    if let planningErrorMessage {
+      messages.append(planningErrorMessage)
     }
 
-    guard let plan else {
-      return ""
+    if case .failed(let message) = status {
+      messages.append(message)
     }
 
-    if plan.blockers.isEmpty == false {
-      return "\(plan.blockers.count) blocker\(plan.blockers.count == 1 ? "" : "s")"
+    if let plan {
+      messages.append(contentsOf: plan.blockers.map(\.message))
     }
 
-    if plan.warnings.isEmpty == false {
-      return "\(plan.warnings.count) warning\(plan.warnings.count == 1 ? "" : "s")"
-    }
-
-    return "Clear"
+    return messages
   }
 }

@@ -7,6 +7,7 @@ struct PlanDetailView: View {
   let outputName: Binding<String>?
   let resetOutputName: () -> Void
   let toolchainErrorMessage: String?
+  let removesSourceAfterSuccess: Bool
   let isDeveloperModeEnabled: Bool
 
   init(
@@ -15,6 +16,7 @@ struct PlanDetailView: View {
     outputName: Binding<String>? = nil,
     resetOutputName: @escaping () -> Void = {},
     toolchainErrorMessage: String? = nil,
+    removesSourceAfterSuccess: Bool = false,
     isDeveloperModeEnabled: Bool = false
   ) {
     self.item = item
@@ -22,6 +24,7 @@ struct PlanDetailView: View {
     self.outputName = outputName
     self.resetOutputName = resetOutputName
     self.toolchainErrorMessage = toolchainErrorMessage
+    self.removesSourceAfterSuccess = removesSourceAfterSuccess
     self.isDeveloperModeEnabled = isDeveloperModeEnabled
   }
 
@@ -46,7 +49,7 @@ struct PlanDetailView: View {
             Label("No File Selected", systemImage: "doc.text.magnifyingglass")
               .font(.headline)
 
-            Text("Select a queued file to inspect its progress, plan, and warnings.")
+            Text("Select a queued file to inspect its progress, output, and planning notes.")
               .font(.callout)
               .foregroundStyle(.secondary)
               .fixedSize(horizontal: false, vertical: true)
@@ -73,13 +76,28 @@ struct PlanDetailView: View {
           .font(.title3.weight(.semibold))
           .lineLimit(1)
 
-        Text(item.selectedPreset.displayName)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
+        HStack(spacing: 6) {
+          Text(item.selectedPreset.displayName)
+          Text("·")
+          Text(item.streamSummary)
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
       }
 
       Spacer()
+
+      if removesSourceAfterSuccess {
+        Image(systemName: "trash")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.red)
+          .help("The original file will be removed after a successful conversion.")
+      }
+
+      if let plan = item.plan {
+        IssueSummaryBadges(blockers: plan.blockers, warnings: plan.warnings, compact: true)
+      }
 
       DetailStatusBadge(status: item.status)
     }
@@ -125,7 +143,7 @@ struct PlanDetailView: View {
     switch item.status {
     case .analyzing:
       DetailSection(title: "Progress") {
-        HStack(spacing: 10) {
+        HStack(spacing: 9) {
           ProgressView()
             .controlSize(.small)
 
@@ -138,37 +156,18 @@ struct PlanDetailView: View {
       let progress = boundedProgress(item.progress)
 
       DetailSection(title: "Progress") {
-        HStack(spacing: 10) {
-          ProgressView(value: progress)
-            .frame(maxWidth: 360)
-
-          Text(progressPercentage(progress))
-            .font(.caption.monospacedDigit())
-            .foregroundStyle(.secondary)
-            .frame(width: 42, alignment: .trailing)
-        }
-
-        Text(item.status == .completed ? "Complete" : "Converting file")
-          .font(.caption)
-          .foregroundStyle(.secondary)
+        ProgressSummary(
+          status: item.status,
+          progress: progress,
+          message: item.status == .completed ? "Complete" : "Converting file"
+        )
       }
     case .failed where item.progress > 0:
       let progress = boundedProgress(item.progress)
 
       DetailSection(title: "Progress") {
-        HStack(spacing: 10) {
-          ProgressView(value: progress)
-            .frame(maxWidth: 360)
-
-          Text(progressPercentage(progress))
-            .font(.caption.monospacedDigit())
-            .foregroundStyle(.secondary)
-            .frame(width: 42, alignment: .trailing)
-        }
-
-        Text("Stopped before completion")
-          .font(.caption)
-          .foregroundStyle(.secondary)
+        ProgressSummary(
+          status: item.status, progress: progress, message: "Stopped before completion")
       }
     default:
       EmptyView()
@@ -177,16 +176,8 @@ struct PlanDetailView: View {
 
   @ViewBuilder
   private func itemDetails(_ item: QueueItem) -> some View {
-    DetailSection(title: "File") {
-      DetailRow(
-        label: "Output",
-        value: item.customOutputName.isEmpty ? item.defaultOutputName : item.customOutputName)
-      DetailRow(label: "Preset", value: item.selectedPreset.displayName)
-      DetailRow(label: "Status", value: item.status.displayName)
-    }
-
     if let planningErrorMessage = item.planningErrorMessage {
-      DetailSection(title: "Planning Issue") {
+      DetailSection(title: "Needs Attention") {
         Label(planningErrorMessage, systemImage: "exclamationmark.triangle")
           .font(.caption)
           .foregroundStyle(.orange)
@@ -196,25 +187,31 @@ struct PlanDetailView: View {
 
     if let plan = item.plan {
       DetailSection(title: "Output") {
-        DetailRow(label: "Mode", value: plan.mode.displayName)
         DetailRow(label: "Video", value: plan.output.videoURL.lastPathComponent)
+        DetailRow(
+          label: "Folder", value: displayPath(plan.output.videoURL.deletingLastPathComponent()))
+        DetailRow(label: "Mode", value: plan.mode.displayName)
 
         if plan.output.sidecarURLs.isEmpty == false {
-          ForEach(plan.output.sidecarURLs, id: \.self) { url in
-            DetailRow(label: "Sidecar", value: url.lastPathComponent)
+          DetailDivider()
+
+          ForEach(plan.output.sidecarURLs, id: \.self) { sidecarURL in
+            DetailRow(label: "Sidecar", value: sidecarURL.lastPathComponent)
           }
+        }
+
+        if removesSourceAfterSuccess {
+          DetailDivider()
+
+          Label("Original will be removed after successful conversion.", systemImage: "trash")
+            .font(.caption)
+            .foregroundStyle(.red)
         }
       }
 
       if plan.warnings.isEmpty == false || plan.blockers.isEmpty == false {
-        DetailSection(title: "Warnings And Blockers") {
-          ForEach(plan.blockers) { issue in
-            IssueRow(issue: issue)
-          }
-
-          ForEach(plan.warnings) { issue in
-            IssueRow(issue: issue)
-          }
+        DetailSection(title: "Checks") {
+          IssueSummaryBadges(blockers: plan.blockers, warnings: plan.warnings)
         }
       }
     }
@@ -270,8 +267,13 @@ struct PlanDetailView: View {
     min(max(progress, 0), 1)
   }
 
-  private func progressPercentage(_ progress: Double) -> String {
-    "\(Int((progress * 100).rounded()))%"
+  private func displayPath(_ url: URL) -> String {
+    let homePath = FileManager.default.homeDirectoryForCurrentUser.path
+    guard url.path.hasPrefix(homePath) else {
+      return url.path
+    }
+
+    return "~" + String(url.path.dropFirst(homePath.count))
   }
 
   private func developerDetailsText(for item: QueueItem) -> String {
@@ -301,145 +303,5 @@ struct PlanDetailView: View {
 
   private func logsText(for item: QueueItem) -> String {
     item.logLines.joined(separator: "\n")
-  }
-}
-
-private struct DetailSection<Content: View>: View {
-  let title: String
-  let copyText: String?
-  let copyHelp: String
-  private let content: Content
-
-  init(
-    title: String,
-    copyText: String? = nil,
-    copyHelp: String = "Copy section contents.",
-    @ViewBuilder content: () -> Content
-  ) {
-    self.title = title
-    self.copyText = copyText
-    self.copyHelp = copyHelp
-    self.content = content()
-  }
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
-      HStack(spacing: 8) {
-        Text(title)
-          .font(.subheadline.weight(.semibold))
-
-        Spacer()
-
-        if let copyText, copyText.isEmpty == false {
-          CopyToClipboardButton(text: copyText, help: copyHelp)
-        }
-      }
-
-      VStack(alignment: .leading, spacing: 6) {
-        content
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-    }
-    .padding(16)
-    .remuxerGlassPanel(cornerRadius: 16)
-  }
-}
-
-private struct CopyToClipboardButton: View {
-  let text: String
-  let help: String
-
-  var body: some View {
-    Button {
-      let pasteboard = NSPasteboard.general
-      pasteboard.clearContents()
-      pasteboard.setString(text, forType: .string)
-    } label: {
-      Label("Copy", systemImage: "doc.on.doc")
-    }
-    .labelStyle(.iconOnly)
-    .buttonStyle(.borderless)
-    .help(help)
-    .accessibilityLabel(Text(help))
-  }
-}
-
-private struct DetailStatusBadge: View {
-  let status: QueueItemStatus
-
-  var body: some View {
-    Text(status.displayName)
-      .font(.caption.weight(.semibold))
-      .foregroundStyle(foregroundStyle)
-      .padding(.horizontal, 9)
-      .padding(.vertical, 5)
-      .background(backgroundStyle, in: Capsule())
-  }
-
-  private var foregroundStyle: Color {
-    switch status {
-    case .blocked, .failed:
-      .red
-    case .completed:
-      .green
-    case .converting, .analyzing:
-      .blue
-    case .queued, .ready:
-      .primary
-    }
-  }
-
-  private var backgroundStyle: Color {
-    foregroundStyle.opacity(0.14)
-  }
-}
-
-private struct DetailRow: View {
-  let label: String
-  let value: String
-
-  var body: some View {
-    Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 0) {
-      GridRow {
-        Text(label)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-          .frame(width: 68, alignment: .leading)
-
-        Text(value)
-          .font(.caption)
-          .lineLimit(2)
-          .truncationMode(.middle)
-          .textSelection(.enabled)
-      }
-    }
-  }
-}
-
-private struct IssueRow: View {
-  let issue: PlanIssue
-
-  var body: some View {
-    Label(
-      issue.message,
-      systemImage: issue.severity == .blocker ? "xmark.octagon" : "exclamationmark.triangle"
-    )
-    .font(.caption)
-    .foregroundStyle(issue.severity == .blocker ? .red : .orange)
-    .fixedSize(horizontal: false, vertical: true)
-  }
-}
-
-private struct CommandBlock: View {
-  let command: ProcessCommand
-
-  var body: some View {
-    Text(command.displayString)
-      .font(.system(.caption, design: .monospaced))
-      .textSelection(.enabled)
-      .fixedSize(horizontal: false, vertical: true)
-      .padding(8)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .background(.quaternary, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
   }
 }

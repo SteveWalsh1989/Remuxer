@@ -53,16 +53,53 @@ final class ConversionQueueTests: XCTestCase {
     XCTAssertEqual(executor.commands.count, 2)
   }
 
+  func testConversionRemovesSourceAfterSuccessfulConversionWhenEnabled() async {
+    let sourceFileCleaner = FakeSourceFileCleaner()
+    let queue = makeQueue(sourceFileCleaner: sourceFileCleaner)
+    let sourceURL = URL(fileURLWithPath: "/Movies/Movie.mkv")
+    queue.outputOptions.removeSourceAfterSuccess = true
+
+    queue.addFiles([sourceURL])
+    await queue.startConversion()
+
+    XCTAssertEqual(queue.items.first?.status, .completed)
+    XCTAssertEqual(sourceFileCleaner.removedURLs, [sourceURL])
+    XCTAssertTrue(queue.items.first?.logLines.contains("Removed original file") == true)
+  }
+
   func testConversionDoesNotRunCommandsWhenOutputPreparationFails() async {
     let executor = FakeExecutor()
     let outputPreparer = FakeOutputPreparer(result: .failure(FakeOutputPrepareError.failed))
-    let queue = makeQueue(executor: executor, outputPreparer: outputPreparer)
+    let sourceFileCleaner = FakeSourceFileCleaner()
+    let queue = makeQueue(
+      executor: executor,
+      outputPreparer: outputPreparer,
+      sourceFileCleaner: sourceFileCleaner
+    )
+    queue.outputOptions.removeSourceAfterSuccess = true
 
     queue.addFiles([URL(fileURLWithPath: "/Movies/Movie.mkv")])
     await queue.startConversion()
 
     XCTAssertEqual(queue.items.first?.status, .failed("Could not create output folder."))
     XCTAssertEqual(executor.commands.count, 0)
+    XCTAssertTrue(sourceFileCleaner.removedURLs.isEmpty)
+  }
+
+  func testSourceRemovalFailureMarksCompletedConversionAsFailed() async {
+    let sourceFileCleaner = FakeSourceFileCleaner(result: .failure(FakeSourceDeleteError.denied))
+    let queue = makeQueue(sourceFileCleaner: sourceFileCleaner)
+    queue.outputOptions.removeSourceAfterSuccess = true
+
+    queue.addFiles([URL(fileURLWithPath: "/Movies/Movie.mkv")])
+    await queue.startConversion()
+
+    guard case .failed(let message) = queue.items.first?.status else {
+      return XCTFail("Expected failed cleanup status.")
+    }
+
+    XCTAssertTrue(message.contains("could not remove the original file"))
+    XCTAssertEqual(sourceFileCleaner.removedURLs, [URL(fileURLWithPath: "/Movies/Movie.mkv")])
   }
 
   func testDestinationSelectionPersistsRecentAndSavedLocations() {
@@ -91,6 +128,85 @@ final class ConversionQueueTests: XCTestCase {
     XCTAssertEqual(queue.items.first?.plan?.output.videoURL.lastPathComponent, "Movie Export.mp4")
   }
 
+  func testOutputNameSequenceAppliesToFullQueueWhenSelectionIsEmpty() throws {
+    let queue = makeQueue()
+
+    queue.addFiles([
+      URL(fileURLWithPath: "/Shows/Episode A.mkv"),
+      URL(fileURLWithPath: "/Shows/Episode B.mkv"),
+      URL(fileURLWithPath: "/Shows/Episode C.mkv"),
+    ])
+
+    try queue.applyOutputNameSequence(
+      prefix: "PeaceMaker S02E",
+      startNumberText: "01",
+      to: []
+    )
+
+    XCTAssertEqual(
+      queue.items.map(\.customOutputName),
+      ["PeaceMaker S02E01", "PeaceMaker S02E02", "PeaceMaker S02E03"]
+    )
+  }
+
+  func testOutputNameSequenceAppliesOnlyToSelectionInQueueOrder() throws {
+    let queue = makeQueue()
+
+    queue.addFiles([
+      URL(fileURLWithPath: "/Shows/Episode A.mkv"),
+      URL(fileURLWithPath: "/Shows/Episode B.mkv"),
+      URL(fileURLWithPath: "/Shows/Episode C.mkv"),
+    ])
+    let selectedIDs: Set<QueueItem.ID> = [queue.items[2].id, queue.items[0].id]
+
+    try queue.applyOutputNameSequence(
+      prefix: "PeaceMaker S02E",
+      startNumberText: "01",
+      to: selectedIDs
+    )
+
+    XCTAssertEqual(
+      queue.items.map(\.customOutputName),
+      ["PeaceMaker S02E01", "", "PeaceMaker S02E02"]
+    )
+  }
+
+  func testOutputNameSequenceOverwritesExistingCustomNamesOnTargets() throws {
+    let queue = makeQueue()
+
+    queue.addFiles([
+      URL(fileURLWithPath: "/Shows/Episode A.mkv"),
+      URL(fileURLWithPath: "/Shows/Episode B.mkv"),
+    ])
+    try queue.applyOutputNameSequence(prefix: "Old ", startNumberText: "01", to: [])
+    try queue.applyOutputNameSequence(prefix: "New ", startNumberText: "07", to: [])
+
+    XCTAssertEqual(queue.items.map(\.customOutputName), ["New 07", "New 08"])
+  }
+
+  func testOutputNameSequenceReplansAnalyzedItems() async throws {
+    let queue = makeQueue()
+
+    queue.addFiles([URL(fileURLWithPath: "/Shows/Episode A.mkv")])
+    await queue.analyzeItems()
+    let itemID = try XCTUnwrap(queue.items.first?.id)
+
+    try queue.applyOutputNameSequence(
+      prefix: "PeaceMaker S02E",
+      startNumberText: "01",
+      to: [itemID]
+    )
+
+    XCTAssertEqual(
+      queue.items.first?.plan?.output.videoURL.lastPathComponent,
+      "PeaceMaker S02E01.mp4"
+    )
+    XCTAssertEqual(
+      queue.items.first?.plan?.output.sidecarURLs.first?.lastPathComponent,
+      "PeaceMaker S02E01.2.eng.srt"
+    )
+  }
+
   func testRefreshToolchainStatusReportsMissingBundledRuntime() {
     let toolLocator = FakeToolLocator(result: .failure(.missingFFmpeg))
     let queue = makeQueue(toolLocator: toolLocator)
@@ -105,7 +221,8 @@ final class ConversionQueueTests: XCTestCase {
     toolLocator: FakeToolLocator = FakeToolLocator(),
     destinationStore: DestinationPersisting = FakeDestinationStore(),
     outputPreparer: OutputPreparing = FakeOutputPreparer(),
-    resourceAccess: SecurityScopedResourceAccessing = FakeResourceAccess()
+    resourceAccess: SecurityScopedResourceAccessing = FakeResourceAccess(),
+    sourceFileCleaner: SourceFileCleaning = FakeSourceFileCleaner()
   ) -> ConversionQueue {
     let executor = executor ?? FakeExecutor()
 
@@ -117,7 +234,8 @@ final class ConversionQueueTests: XCTestCase {
       toolLocator: toolLocator,
       destinationStore: destinationStore,
       outputPreparer: outputPreparer,
-      resourceAccess: resourceAccess
+      resourceAccess: resourceAccess,
+      sourceFileCleaner: sourceFileCleaner
     )
   }
 }
@@ -251,6 +369,32 @@ private final class FakeOutputPreparer: OutputPreparing {
   func prepareOutput(for output: PlannedOutput) throws {
     outputs.append(output)
     try result.get()
+  }
+}
+
+private enum FakeSourceDeleteError: LocalizedError {
+  case denied
+
+  var errorDescription: String? {
+    "Source could not be removed."
+  }
+}
+
+private final class FakeSourceFileCleaner: SourceFileCleaning {
+  private(set) var removedURLs: [URL] = []
+  let result: Result<Void, Error>
+
+  init(result: Result<Void, Error> = .success(())) {
+    self.result = result
+  }
+
+  func removeSourceFile(at url: URL) throws {
+    removedURLs.append(url)
+    do {
+      try result.get()
+    } catch {
+      throw SourceFileDeletionError.removeFailed(url, error.localizedDescription)
+    }
   }
 }
 

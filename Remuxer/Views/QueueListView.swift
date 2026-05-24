@@ -75,12 +75,12 @@ private struct QueueSidebarRow: View {
 
   var body: some View {
     HStack(spacing: 10) {
-      Image(systemName: statusSymbol)
+      Image(systemName: item.status.progressSymbol)
         .font(.system(size: 14, weight: .medium))
-        .foregroundStyle(statusColor)
+        .foregroundStyle(item.status.progressTint)
         .frame(width: 18)
 
-      VStack(alignment: .leading, spacing: 3) {
+      VStack(alignment: .leading, spacing: 4) {
         Text(item.fileName)
           .font(.body)
           .lineLimit(1)
@@ -94,59 +94,33 @@ private struct QueueSidebarRow: View {
         .foregroundStyle(.secondary)
         .lineLimit(1)
 
-        if item.issueSummary.isEmpty == false {
-          Text(item.issueSummary)
-            .font(.caption2)
-            .foregroundStyle(issueColor)
-            .lineLimit(1)
+        if shouldShowInlineProgress {
+          ConversionProgressMeter(progress: item.progress, status: item.status, height: 4)
+            .frame(width: 96)
         }
       }
 
       Spacer(minLength: 6)
 
-      if item.status == .converting {
-        ProgressView(value: item.progress)
-          .controlSize(.small)
-          .frame(width: 42)
+      if item.blockingIssueMessages.isEmpty == false {
+        Image(systemName: "exclamationmark.triangle.fill")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.red)
+          .help(item.blockingIssueMessages.joined(separator: "\n"))
       }
     }
     .padding(.vertical, 5)
   }
 
-  private var statusSymbol: String {
+  private var shouldShowInlineProgress: Bool {
     switch item.status {
-    case .queued:
-      "clock"
-    case .analyzing:
-      "waveform.path.ecg"
-    case .ready:
-      "checkmark.circle"
-    case .converting:
-      "play.circle"
-    case .completed:
-      "checkmark.circle.fill"
+    case .converting, .completed:
+      true
     case .failed:
-      "xmark.octagon"
-    case .blocked:
-      "hand.raised"
+      item.progress > 0
+    case .queued, .analyzing, .ready, .blocked:
+      false
     }
-  }
-
-  private var statusColor: Color {
-    switch item.status {
-    case .blocked, .failed:
-      .red
-    case .completed:
-      .green
-    case .converting, .analyzing:
-      .blue
-    case .queued, .ready:
-      .secondary
-    }
-  }
-
-  private var issueColor: Color {
-    item.plan?.blockers.isEmpty == false ? .red : .orange
   }
 }
 

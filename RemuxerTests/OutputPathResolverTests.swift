@@ -109,6 +109,41 @@ final class OutputPathResolverTests: XCTestCase {
     XCTAssertEqual(output.path, "/Movies/john-wick-remastered.3.eng.srt")
   }
 
+  func testOutputNameSequenceUsesStartWidthAsPadding() throws {
+    let sequence = try OutputNameSequence(prefix: "PeaceMaker S02E", startNumberText: "01")
+
+    XCTAssertEqual(
+      sequence.names(count: 3),
+      ["PeaceMaker S02E01", "PeaceMaker S02E02", "PeaceMaker S02E03"]
+    )
+  }
+
+  func testOutputNameSequencePreservesThreeDigitPadding() throws {
+    let sequence = try OutputNameSequence(prefix: "Scene ", startNumberText: "001")
+
+    XCTAssertEqual(sequence.names(count: 3), ["Scene 001", "Scene 002", "Scene 003"])
+  }
+
+  func testOutputNameSequenceAllowsCounterToGrowPastInitialWidth() throws {
+    let sequence = try OutputNameSequence(prefix: "Episode ", startNumberText: "99")
+
+    XCTAssertEqual(sequence.names(count: 3), ["Episode 99", "Episode 100", "Episode 101"])
+  }
+
+  func testOutputNameSequenceRejectsInvalidStartNumber() {
+    XCTAssertThrowsError(
+      try OutputNameSequence(prefix: "Movie ", startNumberText: "")
+    ) { error in
+      XCTAssertEqual(error as? OutputNameSequenceError, .invalidStartNumber)
+    }
+
+    XCTAssertThrowsError(
+      try OutputNameSequence(prefix: "Movie ", startNumberText: "A1")
+    ) { error in
+      XCTAssertEqual(error as? OutputNameSequenceError, .invalidStartNumber)
+    }
+  }
+
   func testAutoRenamesCollidingOutput() throws {
     let resolver = OutputPathResolver(
       fileChecker: StubFileChecker(existingPaths: ["/Movies/john-wick.mp4"])

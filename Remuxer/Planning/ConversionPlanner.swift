@@ -94,6 +94,12 @@ struct ConversionPlanner: ConversionPlanGenerating {
   ) throws -> ConversionPlan {
     var warnings = subtitlePlan.warnings
     var blockers = requiredVideoBlockers(for: media)
+    blockers.append(
+      contentsOf: sourceRemovalBlockers(
+        for: media,
+        outputURL: outputURL,
+        outputOptions: outputOptions
+      ))
     let compatibleVideoStreams = media.videoStreams.filter(
       StreamCompatibilityRules.canCopyVideoToMP4)
     let compatibleAudioStreams = media.audioStreams.filter(
@@ -154,7 +160,13 @@ struct ConversionPlanner: ConversionPlanGenerating {
     videoArguments: [String]
   ) -> ConversionPlan {
     var warnings = subtitlePlan.warnings
-    let blockers = requiredVideoBlockers(for: media)
+    var blockers = requiredVideoBlockers(for: media)
+    blockers.append(
+      contentsOf: sourceRemovalBlockers(
+        for: media,
+        outputURL: outputURL,
+        outputOptions: outputOptions
+      ))
     let incompatibleAudioStreams = media.audioStreams.filter { stream in
       StreamCompatibilityRules.canCopyAudioToMP4(stream) == false
     }
@@ -224,7 +236,8 @@ struct ConversionPlanner: ConversionPlanGenerating {
       primaryCommand: command,
       subtitleExtractionCommands: [],
       warnings: [],
-      blockers: requiredVideoBlockers(for: media),
+      blockers: requiredVideoBlockers(for: media)
+        + sourceRemovalBlockers(for: media, outputURL: outputURL, outputOptions: outputOptions),
       output: PlannedOutput(videoURL: outputURL, sidecarURLs: subtitlePlan.outputURLs)
     )
   }
@@ -292,6 +305,27 @@ struct ConversionPlanner: ConversionPlanGenerating {
     }
 
     return []
+  }
+
+  private func sourceRemovalBlockers(
+    for media: ProbedMediaFile,
+    outputURL: URL,
+    outputOptions: OutputOptions
+  ) -> [PlanIssue] {
+    guard outputOptions.removeSourceAfterSuccess else {
+      return []
+    }
+
+    guard outputURL.standardizedFileURL == media.sourceURL.standardizedFileURL else {
+      return []
+    }
+
+    return [
+      PlanIssue(
+        severity: .blocker,
+        message: "The original file cannot be removed because the output path is the source file."
+      )
+    ]
   }
 
   private func mp4ContainerWarnings(for media: ProbedMediaFile) -> [PlanIssue] {

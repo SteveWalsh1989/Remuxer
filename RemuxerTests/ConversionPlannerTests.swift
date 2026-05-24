@@ -94,6 +94,28 @@ final class ConversionPlannerTests: XCTestCase {
     XCTAssertTrue(plan.primaryCommand.arguments.contains("0"))
   }
 
+  func testSourceRemovalBlocksWhenOutputWouldReplaceSource() throws {
+    let planner = ConversionPlanner(
+      outputPathResolver: OutputPathResolver(fileChecker: EmptyFileChecker()))
+    var outputOptions = OutputOptions()
+    outputOptions.collisionResolution = .replace
+    outputOptions.removeSourceAfterSuccess = true
+
+    let plan = try planner.makePlan(
+      for: media(videoCodec: "h264", audioCodec: "aac", subtitleCodec: nil),
+      preset: .archive,
+      outputOptions: outputOptions
+    )
+
+    XCTAssertFalse(plan.canExecute)
+    XCTAssertTrue(
+      plan.blockers.contains {
+        $0.message
+          == "The original file cannot be removed because the output path is the source file."
+      }
+    )
+  }
+
   private func media(
     videoCodec: String = "h264",
     audioCodec: String,

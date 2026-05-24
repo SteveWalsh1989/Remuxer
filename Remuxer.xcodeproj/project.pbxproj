@@ -29,6 +29,9 @@
 		BF0000000000000000000021 /* DestinationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000021 /* DestinationStore.swift */; };
 		BF0000000000000000000022 /* OutputPreparer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000022 /* OutputPreparer.swift */; };
 		BF0000000000000000000023 /* SecurityScopedResourceAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000023 /* SecurityScopedResourceAccess.swift */; };
+		BF0000000000000000000024 /* SourceFileCleaner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000024 /* SourceFileCleaner.swift */; };
+		BF0000000000000000000025 /* PlanDetailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000025 /* PlanDetailComponents.swift */; };
+		BF0000000000000000000026 /* ContentViewComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000026 /* ContentViewComponents.swift */; };
 		BR0000000000000000000001 /* FFmpeg in Resources */ = {isa = PBXBuildFile; fileRef = R00000000000000000000001 /* FFmpeg */; };
 		BT0000000000000000000001 /* CompatibilityRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000001 /* CompatibilityRulesTests.swift */; };
 		BT0000000000000000000002 /* ConversionPlannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000002 /* ConversionPlannerTests.swift */; };
@@ -76,6 +79,9 @@
 		F00000000000000000000021 /* DestinationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationStore.swift; sourceTree = "<group>"; };
 		F00000000000000000000022 /* OutputPreparer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputPreparer.swift; sourceTree = "<group>"; };
 		F00000000000000000000023 /* SecurityScopedResourceAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityScopedResourceAccess.swift; sourceTree = "<group>"; };
+		F00000000000000000000024 /* SourceFileCleaner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceFileCleaner.swift; sourceTree = "<group>"; };
+		F00000000000000000000025 /* PlanDetailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanDetailComponents.swift; sourceTree = "<group>"; };
+		F00000000000000000000026 /* ContentViewComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewComponents.swift; sourceTree = "<group>"; };
 		T00000000000000000000001 /* CompatibilityRulesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompatibilityRulesTests.swift; sourceTree = "<group>"; };
 		T00000000000000000000002 /* ConversionPlannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionPlannerTests.swift; sourceTree = "<group>"; };
 		T00000000000000000000003 /* ConversionQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionQueueTests.swift; sourceTree = "<group>"; };
@@ -156,6 +162,7 @@
 				F00000000000000000000022 /* OutputPreparer.swift */,
 				F00000000000000000000007 /* OutputPathResolver.swift */,
 				F00000000000000000000023 /* SecurityScopedResourceAccess.swift */,
+				F00000000000000000000024 /* SourceFileCleaner.swift */,
 			);
 			path = Filesystem;
 			sourceTree = "<group>";
@@ -202,6 +209,8 @@
 			isa = PBXGroup;
 			children = (
 				F00000000000000000000017 /* ContentView.swift */,
+				F00000000000000000000026 /* ContentViewComponents.swift */,
+				F00000000000000000000025 /* PlanDetailComponents.swift */,
 				F00000000000000000000018 /* PlanDetailView.swift */,
 				F00000000000000000000020 /* QueueListView.swift */,
 			);
@@ -367,6 +376,9 @@
 				BF0000000000000000000021 /* DestinationStore.swift in Sources */,
 				BF0000000000000000000022 /* OutputPreparer.swift in Sources */,
 				BF0000000000000000000023 /* SecurityScopedResourceAccess.swift in Sources */,
+				BF0000000000000000000024 /* SourceFileCleaner.swift in Sources */,
+				BF0000000000000000000025 /* PlanDetailComponents.swift in Sources */,
+				BF0000000000000000000026 /* ContentViewComponents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -21,6 +21,7 @@ final class ConversionQueue: ObservableObject {
   private let destinationStore: DestinationPersisting
   private let outputPreparer: OutputPreparing
   private let resourceAccess: SecurityScopedResourceAccessing
+  private let sourceFileCleaner: SourceFileCleaning
   private var shouldCancelActiveRun = false
 
   init(
@@ -30,7 +31,8 @@ final class ConversionQueue: ObservableObject {
     toolLocator: ToolLocating,
     destinationStore: DestinationPersisting = UserDefaultsDestinationStore(),
     outputPreparer: OutputPreparing = OutputPreparer(),
-    resourceAccess: SecurityScopedResourceAccessing = SecurityScopedResourceAccess()
+    resourceAccess: SecurityScopedResourceAccessing = SecurityScopedResourceAccess(),
+    sourceFileCleaner: SourceFileCleaning = SourceFileCleaner()
   ) {
     self.analyzer = analyzer
     self.planner = planner
@@ -39,12 +41,9 @@ final class ConversionQueue: ObservableObject {
     self.destinationStore = destinationStore
     self.outputPreparer = outputPreparer
     self.resourceAccess = resourceAccess
+    self.sourceFileCleaner = sourceFileCleaner
     recentDestinationURLs = destinationStore.loadRecentDestinations()
     savedDestinationURLs = destinationStore.loadSavedDestinations()
-  }
-
-  var readyCount: Int {
-    items.filter { $0.status == .ready }.count
   }
 
   var completedCount: Int {
@@ -99,6 +98,18 @@ final class ConversionQueue: ObservableObject {
 
     for id in targetIDs {
       setPreset(defaultPreset, for: id)
+    }
+  }
+
+  func applyOutputNameSequence(
+    prefix: String,
+    startNumberText: String,
+    to ids: Set<QueueItem.ID>
+  ) throws {
+    let sequence = try OutputNameSequence(prefix: prefix, startNumberText: startNumberText)
+
+    for (offset, id) in effectiveTargetIDs(ids).enumerated() {
+      setCustomOutputName(sequence.name(at: offset), for: id)
     }
   }
 
@@ -215,6 +226,10 @@ final class ConversionQueue: ObservableObject {
   }
 
   private func run(plan: ConversionPlan, for id: QueueItem.ID) async {
+    guard let sourceURL = item(with: id)?.sourceURL else {
+      return
+    }
+
     updateItem(id) { item in
       item.status = .converting
       item.progress = 0
@@ -224,6 +239,7 @@ final class ConversionQueue: ObservableObject {
     do {
       let accessURLs = resourceAccessURLs(for: plan)
       let duration = item(with: id)?.media?.duration
+      let shouldRemoveSourceAfterSuccess = outputOptions.removeSourceAfterSuccess
 
       try await resourceAccess.access(urls: accessURLs) {
         try outputPreparer.prepareOutput(for: plan.output)
@@ -257,6 +273,13 @@ final class ConversionQueue: ObservableObject {
             }
           }
         )
+
+        if shouldRemoveSourceAfterSuccess {
+          try sourceFileCleaner.removeSourceFile(at: sourceURL)
+          updateItem(id) { item in
+            item.logLines.append("Removed original file")
+          }
+        }
       }
 
       updateItem(id) { item in
@@ -311,7 +334,10 @@ final class ConversionQueue: ObservableObject {
     }
   }
 
-  private func effectiveTargetIDs(_ ids: Set<QueueItem.ID>) -> [QueueItem.ID] {
+}
+
+extension ConversionQueue {
+  fileprivate func effectiveTargetIDs(_ ids: Set<QueueItem.ID>) -> [QueueItem.ID] {
     if ids.isEmpty {
       return items.map(\.id)
     }
@@ -320,7 +346,7 @@ final class ConversionQueue: ObservableObject {
     return items.map(\.id).filter { requested.contains($0) }
   }
 
-  private func markTargetsAsFailed(_ ids: Set<QueueItem.ID>, message: String) {
+  fileprivate func markTargetsAsFailed(_ ids: Set<QueueItem.ID>, message: String) {
     for id in effectiveTargetIDs(ids) {
       updateItem(id) { item in
         item.status = .failed(message)
@@ -329,7 +355,7 @@ final class ConversionQueue: ObservableObject {
     }
   }
 
-  private func updateItem(_ id: QueueItem.ID, mutate: (inout QueueItem) -> Void) {
+  fileprivate func updateItem(_ id: QueueItem.ID, mutate: (inout QueueItem) -> Void) {
     guard let index = items.firstIndex(where: { $0.id == id }) else {
       return
     }
@@ -337,7 +363,7 @@ final class ConversionQueue: ObservableObject {
     mutate(&items[index])
   }
 
-  private func replaceItem(_ item: QueueItem) {
+  fileprivate func replaceItem(_ item: QueueItem) {
     guard let index = items.firstIndex(where: { $0.id == item.id }) else {
       return
     }
@@ -345,17 +371,17 @@ final class ConversionQueue: ObservableObject {
     items[index] = item
   }
 
-  private func item(with id: QueueItem.ID) -> QueueItem? {
+  fileprivate func item(with id: QueueItem.ID) -> QueueItem? {
     items.first { $0.id == id }
   }
 
-  private func appendLog(_ line: String, to id: QueueItem.ID) {
+  fileprivate func appendLog(_ line: String, to id: QueueItem.ID) {
     updateItem(id) { item in
       item.logLines.append(line)
     }
   }
 
-  private func resourceAccessURLs(for plan: ConversionPlan) -> [URL] {
+  fileprivate func resourceAccessURLs(for plan: ConversionPlan) -> [URL] {
     var urls = plan.primaryCommand.arguments.compactMap(URL.filePathArgument)
     urls.append(plan.output.videoURL.deletingLastPathComponent())
     urls.append(contentsOf: plan.output.sidecarURLs.map { $0.deletingLastPathComponent() })

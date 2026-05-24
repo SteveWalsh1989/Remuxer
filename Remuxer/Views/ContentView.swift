@@ -6,10 +6,11 @@ struct ContentView: View {
   @ObservedObject var queue: ConversionQueue
 
   @AppStorage("isDeveloperModeEnabled") private var isDeveloperModeEnabled = false
-  @AppStorage("lastSourceFolderPath") private var lastSourceFolderPath = ""
+  @AppStorage("lastSourceFolderPath") var lastSourceFolderPath = ""
 
   @State private var selectedItemIDs: Set<QueueItem.ID> = []
   @State private var isDropTargeted = false
+  @State private var isBatchRenameSheetPresented = false
 
   var body: some View {
     NavigationSplitView {
@@ -24,6 +25,13 @@ struct ContentView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     .toolbar { toolbarContent }
+    .sheet(isPresented: $isBatchRenameSheetPresented) {
+      OutputNameSequenceSheet(
+        targetItems: batchRenameTargetItems,
+        isWorking: queue.isWorking,
+        apply: applyOutputNameSequence
+      )
+    }
     .onDrop(
       of: [UTType.fileURL.identifier],
       isTargeted: $isDropTargeted,
@@ -158,6 +166,11 @@ extension ContentView {
         }
       }
 
+      Button(batchRenameTitle) {
+        isBatchRenameSheetPresented = true
+      }
+      .disabled(queue.items.isEmpty || queue.isWorking)
+
       Divider()
 
       Picker("Collisions", selection: $queue.outputOptions.collisionResolution) {
@@ -167,6 +180,10 @@ extension ContentView {
       }
       .pickerStyle(.inline)
 
+      Toggle(isOn: $queue.outputOptions.removeSourceAfterSuccess) {
+        Label("Remove Originals After Success", systemImage: "trash")
+      }
+
       Button("Save Current Location") {
         queue.saveSelectedDestination()
       }
@@ -175,6 +192,7 @@ extension ContentView {
       Label("Output", systemImage: "folder")
     }
     .help("Choose where converted files are saved.")
+    .disabled(queue.isWorking)
   }
 
   @ViewBuilder
@@ -191,6 +209,7 @@ extension ContentView {
         outputName: selectedOutputNameBinding,
         resetOutputName: resetSelectedOutputName,
         toolchainErrorMessage: queue.toolchainErrorMessage,
+        removesSourceAfterSuccess: queue.outputOptions.removeSourceAfterSuccess,
         isDeveloperModeEnabled: isDeveloperModeEnabled
       )
     }
@@ -234,12 +253,32 @@ extension ContentView {
     selectedItemIDs.isEmpty ? "Apply Preset to Queue" : "Apply Preset to Selection"
   }
 
+  private var batchRenameTitle: String {
+    selectedItemIDs.isEmpty ? "Batch Rename Queue..." : "Batch Rename Selection..."
+  }
+
+  private var batchRenameTargetItems: [QueueItem] {
+    guard selectedItemIDs.isEmpty == false else {
+      return queue.items
+    }
+
+    return queue.items.filter { selectedItemIDs.contains($0.id) }
+  }
+
   private func resetSelectedOutputName() {
     guard let selectedID = selectedDetailItem?.id else {
       return
     }
 
     queue.resetCustomOutputNames(for: [selectedID])
+  }
+
+  private func applyOutputNameSequence(prefix: String, startNumberText: String) throws {
+    try queue.applyOutputNameSequence(
+      prefix: prefix,
+      startNumberText: startNumberText,
+      to: selectedItemIDs
+    )
   }
 
   private func addSourceFiles(_ urls: [URL]) {
@@ -294,23 +333,6 @@ extension ContentView {
     }
   }
 
-  private var rememberedSourceFolderURL: URL? {
-    guard lastSourceFolderPath.isEmpty == false else {
-      return nil
-    }
-
-    let url = URL(fileURLWithPath: lastSourceFolderPath)
-    return FileManager.default.directoryExists(at: url) ? url : nil
-  }
-
-  private func rememberSourceFolder(from urls: [URL]) {
-    guard let sourceFolderURL = urls.first?.deletingLastPathComponent() else {
-      return
-    }
-
-    lastSourceFolderPath = sourceFolderURL.path
-  }
-
   private func openDroppedFiles(_ providers: [NSItemProvider]) -> Bool {
     let fileProviders = providers.filter {
       $0.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier)
@@ -333,97 +355,5 @@ extension ContentView {
     }
 
     return true
-  }
-}
-
-private struct EmptyQueueDropZone: View {
-  let isDropTargeted: Bool
-  let addFiles: () -> Void
-
-  var body: some View {
-    ZStack {
-      VStack(spacing: 22) {
-        Image(systemName: "film.stack")
-          .font(.system(size: 50, weight: .light))
-          .foregroundStyle(isDropTargeted ? Color.accentColor : Color.secondary)
-
-        VStack(spacing: 7) {
-          Text("Drop MKV files here")
-            .font(.title2.weight(.semibold))
-
-          Text("Add a batch, inspect the generated plans, then convert when everything is clear.")
-            .font(.callout)
-            .foregroundStyle(.secondary)
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: 430)
-        }
-
-        Button {
-          addFiles()
-        } label: {
-          Label("Add MKV Files...", systemImage: "plus")
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .keyboardShortcut("o", modifiers: .command)
-        .help("Add MKV files to the conversion queue.")
-      }
-      .padding(44)
-      .frame(maxWidth: 620)
-      .remuxerGlassPanel(cornerRadius: 28)
-      .overlay {
-        RoundedRectangle(cornerRadius: 28, style: .continuous)
-          .strokeBorder(
-            isDropTargeted ? Color.accentColor : Color.secondary.opacity(0.22),
-            style: StrokeStyle(lineWidth: isDropTargeted ? 2 : 1, dash: [8, 7])
-          )
-          .allowsHitTesting(false)
-      }
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .padding(32)
-  }
-}
-
-private struct RemuxerGlassPanel: ViewModifier {
-  let cornerRadius: CGFloat
-
-  func body(content: Content) -> some View {
-    if #available(macOS 26.0, *) {
-      content
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-    } else {
-      content
-        .background(
-          .regularMaterial,
-          in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-        )
-    }
-  }
-}
-
-extension View {
-  func remuxerGlassPanel(cornerRadius: CGFloat) -> some View {
-    modifier(RemuxerGlassPanel(cornerRadius: cornerRadius))
-  }
-}
-
-private func droppedURL(from item: NSSecureCoding?) -> URL? {
-  if let url = item as? URL {
-    return url
-  }
-
-  if let data = item as? Data {
-    return URL(dataRepresentation: data, relativeTo: nil)
-  }
-
-  return nil
-}
-
-extension FileManager {
-  fileprivate func directoryExists(at url: URL) -> Bool {
-    var isDirectory: ObjCBool = false
-    let exists = fileExists(atPath: url.path, isDirectory: &isDirectory)
-    return exists && isDirectory.boolValue
   }
 }
