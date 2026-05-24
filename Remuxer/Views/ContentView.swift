@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -5,8 +6,6 @@ struct ContentView: View {
   @ObservedObject var queue: ConversionQueue
 
   @State private var selectedItemIDs: Set<QueueItem.ID> = []
-  @State private var isFileImporterPresented = false
-  @State private var isFolderImporterPresented = false
   @State private var isDropTargeted = false
 
   var body: some View {
@@ -21,24 +20,6 @@ struct ContentView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     .toolbar { toolbarContent }
-    .fileImporter(
-      isPresented: $isFileImporterPresented,
-      allowedContentTypes: SupportedInputFile.allowedContentTypes,
-      allowsMultipleSelection: true
-    ) { result in
-      if case .success(let urls) = result {
-        addSourceFiles(urls)
-      }
-    }
-    .fileImporter(
-      isPresented: $isFolderImporterPresented,
-      allowedContentTypes: [.folder],
-      allowsMultipleSelection: false
-    ) { result in
-      if case .success(let urls) = result, let folderURL = urls.first {
-        queue.chooseDestinationFolder(folderURL)
-      }
-    }
     .onDrop(
       of: [UTType.fileURL.identifier],
       isTargeted: $isDropTargeted,
@@ -62,7 +43,7 @@ struct ContentView: View {
     ToolbarItemGroup {
       if queue.items.isEmpty == false {
         Button {
-          isFileImporterPresented = true
+          presentSourceFilePicker()
         } label: {
           Label("Add Files", systemImage: "plus")
         }
@@ -133,7 +114,7 @@ struct ContentView: View {
       .pickerStyle(.inline)
 
       Button("Choose Folder...") {
-        isFolderImporterPresented = true
+        presentDestinationFolderPicker()
       }
 
       if queue.recentDestinationURLs.isEmpty == false {
@@ -189,7 +170,7 @@ struct ContentView: View {
     if queue.items.isEmpty {
       EmptyQueueDropZone(
         isDropTargeted: isDropTargeted,
-        addFiles: { isFileImporterPresented = true }
+        addFiles: presentSourceFilePicker
       )
     } else {
       PlanDetailView(
@@ -255,6 +236,48 @@ struct ContentView: View {
     }
   }
 
+  @MainActor
+  private func presentSourceFilePicker() {
+    let panel = NSOpenPanel()
+    panel.title = "Add MKV Files"
+    panel.message = "Choose one or more MKV files to add to the queue."
+    panel.prompt = "Add"
+    panel.allowedContentTypes = SupportedInputFile.allowedContentTypes
+    panel.allowsMultipleSelection = true
+    panel.canChooseFiles = true
+    panel.canChooseDirectories = false
+    panel.resolvesAliases = true
+
+    panel.begin { response in
+      guard response == .OK else {
+        return
+      }
+
+      addSourceFiles(panel.urls)
+    }
+  }
+
+  @MainActor
+  private func presentDestinationFolderPicker() {
+    let panel = NSOpenPanel()
+    panel.title = "Choose Output Folder"
+    panel.message = "Choose where converted files should be written."
+    panel.prompt = "Choose"
+    panel.allowsMultipleSelection = false
+    panel.canChooseFiles = false
+    panel.canChooseDirectories = true
+    panel.canCreateDirectories = true
+    panel.resolvesAliases = true
+
+    panel.begin { response in
+      guard response == .OK, let folderURL = panel.urls.first else {
+        return
+      }
+
+      queue.chooseDestinationFolder(folderURL)
+    }
+  }
+
   private func openDroppedFiles(_ providers: [NSItemProvider]) -> Bool {
     let fileProviders = providers.filter {
       $0.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier)
@@ -309,6 +332,7 @@ private struct EmptyQueueDropZone: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
+        .keyboardShortcut("o", modifiers: .command)
       }
       .padding(44)
       .frame(maxWidth: 620)
