@@ -4,10 +4,11 @@ This document describes the app behavior implemented in the current codebase. Ke
 
 ## User Workflow
 
-- Remuxer accepts `.mkv` and `.mp4` files through drag and drop, the Add Video Files panel, and app-opened file URLs.
+- Remuxer accepts `.mkv` and `.mp4` files through drag and drop, the Add Video Files panel, and app-opened file URLs. MP4 input support is for remux repair, including files that need Apple-compatible tagging.
 - The queue ignores unsupported file extensions and duplicate source URLs already in the queue.
 - Users can analyze queued files before conversion or press Start and let the queue analyze missing plans first.
 - Queue rows show file name, selected preset, status, inline progress during conversion, and blocking issues.
+- The queue footer shows completed file count, aggregate batch progress, and a percentage for the current queue or selected batch. It shows estimated time remaining only while conversion is active, after at least 15 seconds of runtime, at least 5% duration-weighted progress, and known positive durations for every targeted item.
 - The detail view shows the selected file, preset, stream summary, status, progress, editable output name, output summary, and queue options.
 - Dev Mode is available from the app commands. It reveals raw source/output paths, generated FFmpeg commands, sidecar paths, and logs with copy actions.
 - Completed items can be removed with Clear Completed. Failed or blocked items can be retried from the queue context menu.
@@ -19,7 +20,7 @@ This document describes the app behavior implemented in the current codebase. Ke
 - Series Options appear when more than one file is queued. A prefix and numeric start value generate padded names such as `PeaceMaker S02E01`.
 - Series naming applies when Start is pressed. If multiple files are selected, it applies to the selected files in queue order; otherwise it applies to the whole queue.
 - Extra subtitle sidecar extraction is off by default.
-- Move originals to Trash after success is on by default. Source files are sent to Trash only after all sidecar extraction and the primary conversion complete successfully.
+- Move originals to Trash after success is on by default. Source files are sent to Trash, not permanently removed, only after all sidecar extraction and the primary conversion complete successfully.
 
 ## Output Destinations
 
@@ -28,9 +29,10 @@ This document describes the app behavior implemented in the current codebase. Ke
 - `Folder Per File` writes each output into a folder named after the source file. If a selected folder exists, those per-file folders are created there; otherwise they are created beside each source file.
 - Destination choices are persisted as recent destinations. Users can save selected destinations and remove saved destinations from the Output menu.
 - Collision handling supports `Auto Rename`, `Replace`, and `Block`.
-- `Auto Rename` appends a numeric suffix such as `Movie 2.mp4` when the planned output path exists.
+- `Auto Rename` appends a numeric suffix such as `Movie 2.mp4` or `Movie 2.mkv` when the planned output path exists.
 - `Replace` allows FFmpeg to overwrite the output path unless that path is the source file.
 - `Block` prevents conversion before FFmpeg runs when the planned output path exists.
+- Planned output paths are never allowed to replace the active source file.
 - Generated sidecars use the same base output name plus stream index and language when available, for example `Movie.2.eng.srt`.
 
 ## Preset Behavior
@@ -56,7 +58,7 @@ This document describes the app behavior implemented in the current codebase. Ke
 
 ## Current Constraints
 
-- Remuxer only accepts `.mkv` input files and `.mp4` files that need remux repair.
+- Remuxer only accepts `.mkv` and `.mp4` input files. MP4 input support is scoped to remux repair, not general video editing.
 - MP4 is a compatibility container and cannot preserve every MKV feature.
 - The app is intentionally not app-sandboxed in the current build. Security-scoped access is isolated behind a helper, but durable bookmarks and App Store sandbox behavior remain future production concerns.
 - Remuxer does not silently re-encode video or audio in the `Lossless MP4` preset. Other MP4 presets intentionally transcode video and may transcode incompatible audio with warnings.

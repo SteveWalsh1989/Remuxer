@@ -41,6 +41,7 @@ These standards are durable product constraints. Apply them before and after eve
 ## Conversion-Specific UX
 
 - Surface blockers before conversion starts and keep warnings close to the affected output or stream behavior.
+- Show aggregate batch progress in a way that separates completed item count from per-file conversion progress. Show time remaining only when the estimate is based on enough measured progress data to be useful.
 - Be explicit when output behavior can remove source files. The control for that behavior must be labeled and located with related queue options.
 - Do not present source removal as a row-level action unless there is an actual per-item action.
 - Keep developer-only information, such as full commands and logs, behind Dev Mode unless it is necessary for normal use.

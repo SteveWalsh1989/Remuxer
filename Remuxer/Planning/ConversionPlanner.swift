@@ -321,7 +321,8 @@ struct ConversionPlanner: ConversionPlanGenerating {
     return []
   }
 
-  private func sourceReplacementBlockers(for media: ProbedMediaFile, outputURL: URL) -> [PlanIssue] {
+  private func sourceReplacementBlockers(for media: ProbedMediaFile, outputURL: URL) -> [PlanIssue]
+  {
     guard outputURL.standardizedFileURL == media.sourceURL.standardizedFileURL else {
       return []
     }

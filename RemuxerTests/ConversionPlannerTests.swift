@@ -150,7 +150,8 @@ final class ConversionPlannerTests: XCTestCase {
 
   func testArchiveKeepsMKVContainerAndCopiesAllStreams() throws {
     let planner = ConversionPlanner(
-      outputPathResolver: OutputPathResolver(fileChecker: EmptyFileChecker()))
+      outputPathResolver: OutputPathResolver(
+        fileChecker: StubFileChecker(existingPaths: ["/Movies/Movie.mkv"])))
     var outputOptions = OutputOptions()
     outputOptions.removeSourceAfterSuccess = false
 
@@ -163,6 +164,7 @@ final class ConversionPlannerTests: XCTestCase {
     XCTAssertEqual(plan.mode, .archive)
     XCTAssertTrue(plan.canExecute)
     XCTAssertEqual(plan.output.videoURL.pathExtension, "mkv")
+    XCTAssertEqual(plan.output.videoURL.lastPathComponent, "Movie 2.mkv")
     XCTAssertTrue(plan.primaryCommand.arguments.contains("-map"))
     XCTAssertTrue(plan.primaryCommand.arguments.contains("0"))
   }

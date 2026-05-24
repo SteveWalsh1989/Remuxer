@@ -33,6 +33,7 @@
 		BF0000000000000000000025 /* PlanDetailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000025 /* PlanDetailComponents.swift */; };
 		BF0000000000000000000026 /* ContentViewComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000026 /* ContentViewComponents.swift */; };
 		BF0000000000000000000027 /* QueueOptionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000027 /* QueueOptionsSection.swift */; };
+		BF0000000000000000000028 /* DestinationURLCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000028 /* DestinationURLCollection.swift */; };
 		BR0000000000000000000001 /* FFmpeg in Resources */ = {isa = PBXBuildFile; fileRef = R00000000000000000000001 /* FFmpeg */; };
 		BR0000000000000000000002 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = R00000000000000000000002 /* Assets.xcassets */; };
 		BT0000000000000000000001 /* CompatibilityRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000001 /* CompatibilityRulesTests.swift */; };
@@ -42,6 +43,7 @@
 		BT0000000000000000000005 /* OutputPathResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000005 /* OutputPathResolverTests.swift */; };
 		BT0000000000000000000006 /* ToolchainDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000006 /* ToolchainDetectorTests.swift */; };
 		BT0000000000000000000007 /* FFmpegClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000007 /* FFmpegClientTests.swift */; };
+		BT0000000000000000000008 /* BatchProgressSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T00000000000000000000008 /* BatchProgressSnapshotTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -86,6 +88,8 @@
 		F00000000000000000000025 /* PlanDetailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanDetailComponents.swift; sourceTree = "<group>"; };
 		F00000000000000000000026 /* ContentViewComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewComponents.swift; sourceTree = "<group>"; };
 		F00000000000000000000027 /* QueueOptionsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueOptionsSection.swift; sourceTree = "<group>"; };
+		F00000000000000000000028 /* DestinationURLCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationURLCollection.swift; sourceTree = "<group>"; };
+		T00000000000000000000008 /* BatchProgressSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchProgressSnapshotTests.swift; sourceTree = "<group>"; };
 		T00000000000000000000001 /* CompatibilityRulesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompatibilityRulesTests.swift; sourceTree = "<group>"; };
 		T00000000000000000000002 /* ConversionPlannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionPlannerTests.swift; sourceTree = "<group>"; };
 		T00000000000000000000003 /* ConversionQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionQueueTests.swift; sourceTree = "<group>"; };
@@ -203,6 +207,7 @@
 			isa = PBXGroup;
 			children = (
 				F00000000000000000000021 /* DestinationStore.swift */,
+				F00000000000000000000028 /* DestinationURLCollection.swift */,
 				F00000000000000000000015 /* QueueFormatters.swift */,
 				F00000000000000000000016 /* SupportedInputFile.swift */,
 			);
@@ -232,6 +237,7 @@
 		GRP000000000000000000012 /* RemuxerTests */ = {
 			isa = PBXGroup;
 			children = (
+				T00000000000000000000008 /* BatchProgressSnapshotTests.swift */,
 				T00000000000000000000001 /* CompatibilityRulesTests.swift */,
 				T00000000000000000000002 /* ConversionPlannerTests.swift */,
 				T00000000000000000000003 /* ConversionQueueTests.swift */,
@@ -387,6 +393,7 @@
 				BF0000000000000000000025 /* PlanDetailComponents.swift in Sources */,
 				BF0000000000000000000026 /* ContentViewComponents.swift in Sources */,
 				BF0000000000000000000027 /* QueueOptionsSection.swift in Sources */,
+				BF0000000000000000000028 /* DestinationURLCollection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -401,6 +408,7 @@
 				BT0000000000000000000005 /* OutputPathResolverTests.swift in Sources */,
 				BT0000000000000000000006 /* ToolchainDetectorTests.swift in Sources */,
 				BT0000000000000000000007 /* FFmpegClientTests.swift in Sources */,
+				BT0000000000000000000008 /* BatchProgressSnapshotTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

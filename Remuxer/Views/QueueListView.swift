@@ -70,29 +70,60 @@ private struct QueueFooter: View {
   @ObservedObject var queue: ConversionQueue
 
   var body: some View {
-    HStack(spacing: 8) {
-      Label(completedSummary, systemImage: "checkmark.circle")
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
+    TimelineView(.periodic(from: .now, by: 1)) { context in
+      let progress = queue.batchProgress(now: context.date)
 
-      Spacer(minLength: 8)
+      VStack(alignment: .leading, spacing: 7) {
+        HStack(spacing: 8) {
+          Label(completedSummary(for: progress), systemImage: "checkmark.circle")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
 
-      Button {
-        queue.clearCompleted()
-      } label: {
-        Label("Clear Completed", systemImage: "trash")
+          Spacer(minLength: 8)
+
+          Text(QueueFormatters.percentage(progress.progress))
+            .font(.caption.monospacedDigit().weight(.medium))
+            .foregroundStyle(.secondary)
+
+          Button {
+            queue.clearCompleted()
+          } label: {
+            Label("Clear Completed", systemImage: "trash")
+          }
+          .controlSize(.small)
+          .disabled(queue.canClearCompleted == false)
+          .iconControlTooltip("Remove completed files from the queue.")
+        }
+
+        ConversionProgressMeter(
+          progress: progress.progress, status: status(for: progress), height: 5)
+
+        if let estimatedTimeRemaining = progress.estimatedTimeRemaining {
+          Label(
+            "\(QueueFormatters.duration(estimatedTimeRemaining)) remaining",
+            systemImage: "timer"
+          )
+          .font(.caption.monospacedDigit())
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+        }
       }
-      .controlSize(.small)
-      .disabled(queue.canClearCompleted == false)
-      .iconControlTooltip("Remove completed files from the queue.")
+      .padding(.horizontal, 14)
+      .padding(.vertical, 8)
     }
-    .padding(.horizontal, 14)
-    .padding(.vertical, 8)
   }
 
-  private var completedSummary: String {
-    queue.completedCount == 1 ? "1 completed" : "\(queue.completedCount) completed"
+  private func completedSummary(for progress: BatchProgressSnapshot) -> String {
+    "\(progress.completedCount) of \(progress.totalCount) complete"
+  }
+
+  private func status(for progress: BatchProgressSnapshot) -> QueueItemStatus {
+    if queue.isWorking {
+      return .converting
+    }
+
+    return progress.hasItems && progress.completedCount == progress.totalCount ? .completed : .ready
   }
 }
 

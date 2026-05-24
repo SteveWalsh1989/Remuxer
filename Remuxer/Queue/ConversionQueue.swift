@@ -23,6 +23,8 @@ final class ConversionQueue: ObservableObject {
   private let resourceAccess: SecurityScopedResourceAccessing
   private let sourceFileCleaner: SourceFileCleaning
   private var shouldCancelActiveRun = false
+  private var activeBatchStartedAt: Date?
+  private var activeBatchTargetIDs: [QueueItem.ID] = []
 
   init(
     analyzer: MediaAnalyzing,
@@ -52,6 +54,16 @@ final class ConversionQueue: ObservableObject {
 
   var canClearCompleted: Bool {
     completedCount > 0
+  }
+
+  func batchProgress(now: Date = Date()) -> BatchProgressSnapshot {
+    BatchProgressSnapshot.make(
+      items: items,
+      targetIDs: activeBatchTargetIDs,
+      isWorking: isWorking,
+      startedAt: activeBatchStartedAt,
+      now: now
+    )
   }
 
   func addFiles(_ urls: [URL]) {
@@ -162,7 +174,15 @@ final class ConversionQueue: ObservableObject {
       return
     }
 
-    for id in effectiveTargetIDs(ids) {
+    let targetIDs = effectiveTargetIDs(ids)
+    activeBatchTargetIDs = targetIDs
+    activeBatchStartedAt = Date()
+    defer {
+      activeBatchTargetIDs = []
+      activeBatchStartedAt = nil
+    }
+
+    for id in targetIDs {
       guard shouldCancelActiveRun == false else {
         return
       }
@@ -476,17 +496,5 @@ extension ConversionQueue {
     }
 
     destinationStore.saveRecentDestinations(recentDestinationURLs)
-  }
-}
-
-extension Array where Element == URL {
-  fileprivate mutating func removeDestination(_ url: URL) {
-    let normalizedURL = url.standardizedFileURL
-    removeAll { $0.standardizedFileURL == normalizedURL }
-  }
-
-  fileprivate func containsDestination(_ url: URL) -> Bool {
-    let normalizedURL = url.standardizedFileURL
-    return contains { $0.standardizedFileURL == normalizedURL }
   }
 }
