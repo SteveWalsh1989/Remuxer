@@ -56,6 +56,26 @@ final class ConversionPlannerTests: XCTestCase {
     XCTAssertEqual(plan.blockers.count, 2)
   }
 
+  func testLosslessMP4TagsCopiedHEVCStreamsByOutputIndex() throws {
+    let planner = ConversionPlanner(
+      outputPathResolver: OutputPathResolver(fileChecker: EmptyFileChecker()))
+    let plan = try planner.makePlan(
+      for: media(
+        videoCodec: "h264",
+        audioCodec: "aac",
+        subtitleCodec: nil,
+        extraStreams: [
+          stream(index: 3, kind: .video, codecName: "hevc")
+        ]),
+      preset: .losslessMP4,
+      outputOptions: OutputOptions()
+    )
+
+    XCTAssertFalse(plan.primaryCommand.arguments.contains("-tag:v:0"))
+    let tagIndex = try XCTUnwrap(plan.primaryCommand.arguments.firstIndex(of: "-tag:v:1"))
+    XCTAssertEqual(plan.primaryCommand.arguments[tagIndex + 1], "hvc1")
+  }
+
   func testLosslessMP4WarnsAndSkipsAttachedPictureVideoStreams() throws {
     let planner = ConversionPlanner(
       outputPathResolver: OutputPathResolver(fileChecker: EmptyFileChecker()))
@@ -147,12 +167,11 @@ final class ConversionPlannerTests: XCTestCase {
     XCTAssertTrue(plan.primaryCommand.arguments.contains("0"))
   }
 
-  func testSourceRemovalBlocksWhenOutputWouldReplaceSource() throws {
+  func testOutputPathCannotReplaceSourceFile() throws {
     let planner = ConversionPlanner(
       outputPathResolver: OutputPathResolver(fileChecker: EmptyFileChecker()))
     var outputOptions = OutputOptions()
     outputOptions.collisionResolution = .replace
-    outputOptions.removeSourceAfterSuccess = true
 
     let plan = try planner.makePlan(
       for: media(videoCodec: "h264", audioCodec: "aac", subtitleCodec: nil),
@@ -163,8 +182,7 @@ final class ConversionPlannerTests: XCTestCase {
     XCTAssertFalse(plan.canExecute)
     XCTAssertTrue(
       plan.blockers.contains {
-        $0.message
-          == "The original file cannot be removed because the output path is the source file."
+        $0.message == "The output path cannot be the source file."
       }
     )
   }

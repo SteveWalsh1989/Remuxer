@@ -34,6 +34,10 @@ enum StreamCompatibilityRules {
     mp4CopySubtitleCodecs.contains(normalizedCodecName(stream.codecName))
   }
 
+  static func requiresHVC1TagForMP4Copy(_ stream: MediaStream) -> Bool {
+    stream.kind == .video && ["hevc", "h265"].contains(normalizedCodecName(stream.codecName))
+  }
+
   static func sidecarExtension(for stream: MediaStream) -> String {
     switch normalizedCodecName(stream.codecName) {
     case "subrip", "srt":

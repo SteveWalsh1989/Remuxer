@@ -94,12 +94,7 @@ struct ConversionPlanner: ConversionPlanGenerating {
   ) throws -> ConversionPlan {
     var warnings = subtitlePlan.warnings
     var blockers = requiredVideoBlockers(for: media)
-    blockers.append(
-      contentsOf: sourceRemovalBlockers(
-        for: media,
-        outputURL: outputURL,
-        outputOptions: outputOptions
-      ))
+    blockers.append(contentsOf: sourceReplacementBlockers(for: media, outputURL: outputURL))
     let compatibleVideoStreams = media.videoStreams.filter(
       StreamCompatibilityRules.canCopyVideoToMP4)
     let compatibleAudioStreams = media.audioStreams.filter(
@@ -137,7 +132,9 @@ struct ConversionPlanner: ConversionPlanGenerating {
       executableName: "ffmpeg",
       arguments: commonInputArguments(for: media, outputOptions: outputOptions)
         + mapArguments(for: mappedStreams)
-        + ["-map_metadata", "0", "-map_chapters", "0", "-c", "copy", outputURL.path]
+        + ["-map_metadata", "0", "-map_chapters", "0", "-c", "copy"]
+        + hvc1TagArguments(for: compatibleVideoStreams)
+        + [outputURL.path]
     )
 
     return ConversionPlan(
@@ -161,12 +158,7 @@ struct ConversionPlanner: ConversionPlanGenerating {
   ) -> ConversionPlan {
     var warnings = subtitlePlan.warnings
     var blockers = requiredVideoBlockers(for: media)
-    blockers.append(
-      contentsOf: sourceRemovalBlockers(
-        for: media,
-        outputURL: outputURL,
-        outputOptions: outputOptions
-      ))
+    blockers.append(contentsOf: sourceReplacementBlockers(for: media, outputURL: outputURL))
     let incompatibleAudioStreams = media.audioStreams.filter { stream in
       StreamCompatibilityRules.canCopyAudioToMP4(stream) == false
     }
@@ -237,7 +229,7 @@ struct ConversionPlanner: ConversionPlanGenerating {
       subtitleExtractionCommands: [],
       warnings: [],
       blockers: requiredVideoBlockers(for: media)
-        + sourceRemovalBlockers(for: media, outputURL: outputURL, outputOptions: outputOptions),
+        + sourceReplacementBlockers(for: media, outputURL: outputURL),
       output: PlannedOutput(videoURL: outputURL, sidecarURLs: subtitlePlan.outputURLs)
     )
   }
@@ -329,15 +321,7 @@ struct ConversionPlanner: ConversionPlanGenerating {
     return []
   }
 
-  private func sourceRemovalBlockers(
-    for media: ProbedMediaFile,
-    outputURL: URL,
-    outputOptions: OutputOptions
-  ) -> [PlanIssue] {
-    guard outputOptions.removeSourceAfterSuccess else {
-      return []
-    }
-
+  private func sourceReplacementBlockers(for media: ProbedMediaFile, outputURL: URL) -> [PlanIssue] {
     guard outputURL.standardizedFileURL == media.sourceURL.standardizedFileURL else {
       return []
     }
@@ -345,7 +329,7 @@ struct ConversionPlanner: ConversionPlanGenerating {
     return [
       PlanIssue(
         severity: .blocker,
-        message: "The original file cannot be removed because the output path is the source file."
+        message: "The output path cannot be the source file."
       )
     ]
   }
@@ -380,6 +364,13 @@ extension ConversionPlanner {
 
   fileprivate func mapArguments(for streams: [MediaStream]) -> [String] {
     streams.flatMap { ["-map", "0:\($0.index)"] }
+  }
+
+  fileprivate func hvc1TagArguments(for videoStreams: [MediaStream]) -> [String] {
+    videoStreams.enumerated().flatMap { outputVideoIndex, stream in
+      StreamCompatibilityRules.requiresHVC1TagForMP4Copy(stream)
+        ? ["-tag:v:\(outputVideoIndex)", "hvc1"] : []
+    }
   }
 }
 

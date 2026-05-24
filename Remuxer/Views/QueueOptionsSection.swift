@@ -56,8 +56,8 @@ struct QueueOptionsSection: View {
           DetailDivider()
 
           QueueOptionToggleRow(
-            title: "Remove originals after success",
-            detail: "Delete source files only after successful conversions.",
+            title: "Move originals to Trash after success",
+            detail: "Send source files to Trash only after successful conversions.",
             systemImage: "trash",
             tint: .red,
             isOn: removesSourceAfterSuccess,

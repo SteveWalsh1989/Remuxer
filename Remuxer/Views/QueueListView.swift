@@ -173,7 +173,7 @@ private struct SidebarEmptyState: View {
       Text("No Files")
         .font(.headline)
 
-      Text("Use the drop zone to add MKV files.")
+      Text("Use the drop zone to add MKV or MP4 files.")
         .font(.caption)
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)

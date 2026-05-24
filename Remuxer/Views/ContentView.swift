@@ -51,7 +51,7 @@ extension ContentView {
         IconOnlyButton(
           title: "Add Files",
           systemImage: "plus",
-          help: "Add MKV files to the conversion queue."
+          help: "Add MKV or MP4 files to the conversion queue."
         ) {
           presentSourceFilePicker()
         }
@@ -300,8 +300,8 @@ extension ContentView {
   @MainActor
   private func presentSourceFilePicker() {
     let panel = NSOpenPanel()
-    panel.title = "Add MKV Files"
-    panel.message = "Choose one or more MKV files to add to the queue."
+    panel.title = "Add Video Files"
+    panel.message = "Choose one or more MKV or MP4 files to add to the queue."
     panel.prompt = "Add"
     panel.allowedContentTypes = SupportedInputFile.allowedContentTypes
     panel.allowsMultipleSelection = true

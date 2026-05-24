@@ -279,9 +279,9 @@ final class ConversionQueue: ObservableObject {
         )
 
         if shouldRemoveSourceAfterSuccess {
-          try sourceFileCleaner.removeSourceFile(at: sourceURL)
+          try sourceFileCleaner.moveSourceFileToTrash(at: sourceURL)
           updateItem(id) { item in
-            item.logLines.append("Removed original file")
+            item.logLines.append("Moved original file to Trash")
           }
         }
       }

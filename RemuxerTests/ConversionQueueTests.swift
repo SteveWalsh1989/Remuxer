@@ -16,6 +16,18 @@ final class ConversionQueueTests: XCTestCase {
     XCTAssertEqual(resourceAccess.accessedURLs.first, [URL(fileURLWithPath: "/Movies/Movie.mkv")])
   }
 
+  func testAddFilesAcceptsMKVAndMP4Inputs() {
+    let queue = makeQueue()
+
+    queue.addFiles([
+      URL(fileURLWithPath: "/Movies/Movie.mkv"),
+      URL(fileURLWithPath: "/Movies/Repaired.mp4"),
+      URL(fileURLWithPath: "/Movies/Notes.txt"),
+    ])
+
+    XCTAssertEqual(queue.items.map(\.sourceURL.lastPathComponent), ["Movie.mkv", "Repaired.mp4"])
+  }
+
   func testAnalyzeMarksItemFailedWhenToolchainIsMissing() async {
     let queue = makeQueue(toolLocator: FakeToolLocator(result: .failure(.missingFFmpeg)))
 
@@ -72,7 +84,7 @@ final class ConversionQueueTests: XCTestCase {
     XCTAssertEqual(executor.commands.first?.arguments.last, "/Movies/Movie.2.eng.srt")
   }
 
-  func testConversionRemovesSourceAfterSuccessfulConversionWhenEnabled() async {
+  func testConversionMovesSourceToTrashAfterSuccessfulConversionWhenEnabled() async {
     let sourceFileCleaner = FakeSourceFileCleaner()
     let queue = makeQueue(sourceFileCleaner: sourceFileCleaner)
     let sourceURL = URL(fileURLWithPath: "/Movies/Movie.mkv")
@@ -81,8 +93,8 @@ final class ConversionQueueTests: XCTestCase {
     await queue.startConversion()
 
     XCTAssertEqual(queue.items.first?.status, .completed)
-    XCTAssertEqual(sourceFileCleaner.removedURLs, [sourceURL])
-    XCTAssertTrue(queue.items.first?.logLines.contains("Removed original file") == true)
+    XCTAssertEqual(sourceFileCleaner.trashedURLs, [sourceURL])
+    XCTAssertTrue(queue.items.first?.logLines.contains("Moved original file to Trash") == true)
   }
 
   func testConversionKeepsSourceWhenSourceRemovalIsDisabled() async {
@@ -94,7 +106,7 @@ final class ConversionQueueTests: XCTestCase {
     await queue.startConversion()
 
     XCTAssertEqual(queue.items.first?.status, .completed)
-    XCTAssertTrue(sourceFileCleaner.removedURLs.isEmpty)
+    XCTAssertTrue(sourceFileCleaner.trashedURLs.isEmpty)
   }
 
   func testConversionDoesNotRunCommandsWhenOutputPreparationFails() async {
@@ -112,10 +124,10 @@ final class ConversionQueueTests: XCTestCase {
 
     XCTAssertEqual(queue.items.first?.status, .failed("Could not create output folder."))
     XCTAssertEqual(executor.commands.count, 0)
-    XCTAssertTrue(sourceFileCleaner.removedURLs.isEmpty)
+    XCTAssertTrue(sourceFileCleaner.trashedURLs.isEmpty)
   }
 
-  func testSourceRemovalFailureMarksCompletedConversionAsFailed() async {
+  func testSourceTrashFailureMarksCompletedConversionAsFailed() async {
     let sourceFileCleaner = FakeSourceFileCleaner(result: .failure(FakeSourceDeleteError.denied))
     let queue = makeQueue(sourceFileCleaner: sourceFileCleaner)
 
@@ -126,8 +138,8 @@ final class ConversionQueueTests: XCTestCase {
       return XCTFail("Expected failed cleanup status.")
     }
 
-    XCTAssertTrue(message.contains("could not remove the original file"))
-    XCTAssertEqual(sourceFileCleaner.removedURLs, [URL(fileURLWithPath: "/Movies/Movie.mkv")])
+    XCTAssertTrue(message.contains("could not move the original file"))
+    XCTAssertEqual(sourceFileCleaner.trashedURLs, [URL(fileURLWithPath: "/Movies/Movie.mkv")])
   }
 
   func testDestinationSelectionPersistsRecentAndSavedLocations() {
@@ -457,19 +469,19 @@ private enum FakeSourceDeleteError: LocalizedError {
 }
 
 private final class FakeSourceFileCleaner: SourceFileCleaning {
-  private(set) var removedURLs: [URL] = []
+  private(set) var trashedURLs: [URL] = []
   let result: Result<Void, Error>
 
   init(result: Result<Void, Error> = .success(())) {
     self.result = result
   }
 
-  func removeSourceFile(at url: URL) throws {
-    removedURLs.append(url)
+  func moveSourceFileToTrash(at url: URL) throws {
+    trashedURLs.append(url)
     do {
       try result.get()
     } catch {
-      throw SourceFileDeletionError.removeFailed(url, error.localizedDescription)
+      throw SourceFileCleanupError.trashFailed(url, error.localizedDescription)
     }
   }
 }

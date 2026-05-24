@@ -32,7 +32,7 @@ struct EmptyQueueDropZone: View {
           .foregroundStyle(isDropTargeted ? Color.accentColor : Color.secondary)
 
         VStack(spacing: 7) {
-          Text("Drop MKV files here")
+          Text("Drop MKV or MP4 files here")
             .font(.title2.weight(.semibold))
 
           Text("Add a batch, inspect the generated plans, then convert when everything is clear.")
@@ -45,12 +45,12 @@ struct EmptyQueueDropZone: View {
         Button {
           addFiles()
         } label: {
-          Label("Add MKV Files...", systemImage: "plus")
+          Label("Add Video Files...", systemImage: "plus")
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
         .keyboardShortcut("o", modifiers: .command)
-        .help("Add MKV files to the conversion queue.")
+        .help("Add MKV or MP4 files to the conversion queue.")
       }
       .padding(44)
       .frame(maxWidth: 620)

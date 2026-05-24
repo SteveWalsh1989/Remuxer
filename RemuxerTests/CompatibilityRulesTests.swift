@@ -21,6 +21,21 @@ final class CompatibilityRulesTests: XCTestCase {
       StreamCompatibilityRules.canCopySubtitleToMP4(stream(codecName: "subrip", kind: .subtitle)))
   }
 
+  func testIdentifiesHEVCVideoStreamsThatNeedHVC1TagForMP4Copy() {
+    XCTAssertTrue(
+      StreamCompatibilityRules.requiresHVC1TagForMP4Copy(
+        stream(codecName: "hevc", kind: .video)))
+    XCTAssertTrue(
+      StreamCompatibilityRules.requiresHVC1TagForMP4Copy(
+        stream(codecName: "h265", kind: .video)))
+    XCTAssertFalse(
+      StreamCompatibilityRules.requiresHVC1TagForMP4Copy(
+        stream(codecName: "h264", kind: .video)))
+    XCTAssertFalse(
+      StreamCompatibilityRules.requiresHVC1TagForMP4Copy(
+        stream(codecName: "hevc", kind: .audio)))
+  }
+
   func testSubtitleSidecarExtensionMatchesCodec() {
     XCTAssertEqual(
       StreamCompatibilityRules.sidecarExtension(for: stream(codecName: "subrip", kind: .subtitle)),

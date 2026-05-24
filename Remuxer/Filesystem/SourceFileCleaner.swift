@@ -1,7 +1,7 @@
 import Foundation
 
 protocol SourceFileCleaning {
-  func removeSourceFile(at url: URL) throws
+  func moveSourceFileToTrash(at url: URL) throws
 }
 
 struct SourceFileCleaner: SourceFileCleaning {
@@ -11,23 +11,23 @@ struct SourceFileCleaner: SourceFileCleaning {
     self.fileManager = fileManager
   }
 
-  func removeSourceFile(at url: URL) throws {
+  func moveSourceFileToTrash(at url: URL) throws {
     do {
-      try fileManager.removeItem(at: url)
+      try fileManager.trashItem(at: url, resultingItemURL: nil)
     } catch {
-      throw SourceFileDeletionError.removeFailed(url, error.localizedDescription)
+      throw SourceFileCleanupError.trashFailed(url, error.localizedDescription)
     }
   }
 }
 
-enum SourceFileDeletionError: LocalizedError {
-  case removeFailed(URL, String)
+enum SourceFileCleanupError: LocalizedError {
+  case trashFailed(URL, String)
 
   var errorDescription: String? {
     switch self {
-    case .removeFailed(let url, let reason):
-      "Conversion completed, but Remuxer could not remove the original file "
-        + "\"\(url.lastPathComponent)\". \(reason)"
+    case .trashFailed(let url, let reason):
+      "Conversion completed, but Remuxer could not move the original file "
+        + "\"\(url.lastPathComponent)\" to Trash. \(reason)"
     }
   }
 }

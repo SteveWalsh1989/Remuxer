@@ -158,6 +158,20 @@ final class OutputPathResolverTests: XCTestCase {
     XCTAssertEqual(output.path, "/Movies/john-wick 2.mp4")
   }
 
+  func testAutoRenamesMP4SourceWhenRepairingBesideSource() throws {
+    let resolver = OutputPathResolver(
+      fileChecker: StubFileChecker(existingPaths: ["/Movies/john-wick.mp4"])
+    )
+
+    let output = try resolver.videoOutputURL(
+      for: URL(fileURLWithPath: "/Movies/john-wick.mp4"),
+      preset: .losslessMP4,
+      options: OutputOptions()
+    )
+
+    XCTAssertEqual(output.path, "/Movies/john-wick 2.mp4")
+  }
+
   func testBlocksCollidingOutputWhenConfigured() {
     let resolver = OutputPathResolver(
       fileChecker: StubFileChecker(existingPaths: ["/Movies/john-wick.mp4"])
