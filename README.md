@@ -18,6 +18,8 @@ For local development only, `REMUXER_FFMPEG_BIN_DIR` can point at a folder conta
 
 The bundled FFmpeg runtime lives in `Remuxer/Resources/FFmpeg/bin` and is copied into the app bundle. Runtime build details and license files live in `Remuxer/Resources/FFmpeg`.
 
+Remuxer is intentionally not app-sandboxed. The bundled FFmpeg child process needs normal filesystem access to create converted videos and subtitle sidecars in user-selected output locations.
+
 ## Common Commands
 
 ```bash
