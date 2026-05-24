@@ -6,50 +6,58 @@ struct QueueListView: View {
   let isDropTargeted: Bool
   let addFiles: () -> Void
 
+  @ViewBuilder
   var body: some View {
-    List(selection: $selectedItemIDs) {
-      ForEach(queue.items) { item in
-        QueueItemRow(
-          item: item,
-          presetSelection: Binding(
-            get: { item.selectedPreset },
-            set: { queue.setPreset($0, for: item.id) }
-          ),
-          outputName: Binding(
-            get: { item.customOutputName },
-            set: { queue.setCustomOutputName($0, for: item.id) }
-          )
-        )
-        .tag(item.id)
-        .contextMenu {
-          Button("Analyze") {
-            Task { await queue.analyzeItems(with: [item.id]) }
-          }
-
-          Button("Retry") {
-            Task { await queue.retryItems(with: [item.id]) }
-          }
-
-          Divider()
-
-          Button("Reset Output Name") {
-            queue.resetCustomOutputNames(for: [item.id])
-          }
-
-          Button("Remove") {
-            queue.removeItems(with: [item.id])
-          }
-        }
-      }
+    if queue.items.isEmpty {
+      EmptyQueueView(
+        isDropTargeted: isDropTargeted,
+        addFiles: addFiles
+      )
+    } else {
+      queueList
     }
-    .listStyle(.inset)
+  }
+
+  private var queueList: some View {
+    List(selection: $selectedItemIDs) {
+      queueRows
+    }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .overlay {
-      if queue.items.isEmpty {
-        EmptyQueueView(
-          isDropTargeted: isDropTargeted,
-          addFiles: addFiles
+    .listStyle(.inset)
+  }
+
+  private var queueRows: some View {
+    ForEach(queue.items) { item in
+      QueueItemRow(
+        item: item,
+        presetSelection: Binding(
+          get: { item.selectedPreset },
+          set: { queue.setPreset($0, for: item.id) }
+        ),
+        outputName: Binding(
+          get: { item.customOutputName },
+          set: { queue.setCustomOutputName($0, for: item.id) }
         )
+      )
+      .tag(item.id)
+      .contextMenu {
+        Button("Analyze") {
+          Task { await queue.analyzeItems(with: [item.id]) }
+        }
+
+        Button("Retry") {
+          Task { await queue.retryItems(with: [item.id]) }
+        }
+
+        Divider()
+
+        Button("Reset Output Name") {
+          queue.resetCustomOutputNames(for: [item.id])
+        }
+
+        Button("Remove") {
+          queue.removeItems(with: [item.id])
+        }
       }
     }
   }
@@ -165,39 +173,41 @@ private struct EmptyQueueView: View {
   let addFiles: () -> Void
 
   var body: some View {
-    VStack(spacing: 18) {
-      Image(systemName: "film.stack")
-        .font(.system(size: 44, weight: .light))
-        .foregroundStyle(isDropTargeted ? Color.accentColor : Color.secondary)
+    ZStack {
+      RoundedRectangle(cornerRadius: 8, style: .continuous)
+        .fill(.regularMaterial)
 
-      VStack(spacing: 5) {
-        Text("Drop MKV files here")
-          .font(.title3.weight(.semibold))
-
-        Text("Plans, warnings, and blockers appear before conversion starts.")
-          .font(.callout)
-          .foregroundStyle(.secondary)
-          .multilineTextAlignment(.center)
-      }
-
-      Button {
-        addFiles()
-      } label: {
-        Label("Add MKV Files...", systemImage: "plus")
-      }
-      .buttonStyle(.borderedProminent)
-    }
-    .padding(28)
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-    .overlay {
       RoundedRectangle(cornerRadius: 8, style: .continuous)
         .strokeBorder(
           isDropTargeted ? Color.accentColor : Color.secondary.opacity(0.28),
           style: StrokeStyle(lineWidth: isDropTargeted ? 2 : 1, dash: [7, 6])
         )
         .allowsHitTesting(false)
+
+      VStack(spacing: 18) {
+        Image(systemName: "film.stack")
+          .font(.system(size: 44, weight: .light))
+          .foregroundStyle(isDropTargeted ? Color.accentColor : Color.secondary)
+
+        VStack(spacing: 5) {
+          Text("Drop MKV files here")
+            .font(.title3.weight(.semibold))
+
+          Text("Plans, warnings, and blockers appear before conversion starts.")
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+        }
+
+        Button {
+          addFiles()
+        } label: {
+          Label("Add MKV Files...", systemImage: "plus")
+        }
+        .buttonStyle(.borderedProminent)
+      }
     }
     .padding(28)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 }
