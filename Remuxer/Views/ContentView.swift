@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct ContentView: View {
   @ObservedObject var queue: ConversionQueue
 
+  @AppStorage("isDeveloperModeEnabled") private var isDeveloperModeEnabled = false
   @AppStorage("lastSourceFolderPath") private var lastSourceFolderPath = ""
 
   @State private var selectedItemIDs: Set<QueueItem.ID> = []
@@ -14,7 +15,8 @@ struct ContentView: View {
     NavigationSplitView {
       QueueListView(
         queue: queue,
-        selectedItemIDs: $selectedItemIDs
+        selectedItemIDs: $selectedItemIDs,
+        isDeveloperModeEnabled: $isDeveloperModeEnabled
       )
       .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
     } detail: {
@@ -52,7 +54,7 @@ extension ContentView {
           Label("Add Files", systemImage: "plus")
         }
         .keyboardShortcut("o", modifiers: .command)
-        .help("Add MKV Files")
+        .help("Add MKV files to the conversion queue.")
       }
 
       presetMenu
@@ -64,6 +66,7 @@ extension ContentView {
         Label("Analyze", systemImage: "waveform.path.ecg")
       }
       .disabled(queue.items.isEmpty || queue.isWorking)
+      .help("Analyze queued files and build conversion plans.")
 
       Button {
         Task { await queue.startConversion(with: selectedItemIDs) }
@@ -71,6 +74,7 @@ extension ContentView {
         Label("Start", systemImage: "play.fill")
       }
       .disabled(queue.items.isEmpty || queue.isWorking)
+      .help("Start converting ready files.")
 
       Button {
         queue.cancelActiveConversion()
@@ -78,6 +82,7 @@ extension ContentView {
         Label("Cancel", systemImage: "stop.fill")
       }
       .disabled(queue.isWorking == false)
+      .help("Cancel the active conversion.")
 
       Button {
         queue.clearCompleted()
@@ -85,6 +90,7 @@ extension ContentView {
         Label("Clear Completed", systemImage: "checkmark.circle")
       }
       .disabled(queue.completedCount == 0 || queue.isWorking)
+      .help("Remove completed files from the queue.")
     }
   }
 
@@ -106,6 +112,7 @@ extension ContentView {
     } label: {
       Label(queue.defaultPreset.displayName, systemImage: "slider.horizontal.3")
     }
+    .help("Choose the default conversion preset.")
   }
 
   private var outputMenu: some View {
@@ -167,6 +174,7 @@ extension ContentView {
     } label: {
       Label("Output", systemImage: "folder")
     }
+    .help("Choose where converted files are saved.")
   }
 
   @ViewBuilder
@@ -182,7 +190,8 @@ extension ContentView {
         presetSelection: selectedPresetBinding,
         outputName: selectedOutputNameBinding,
         resetOutputName: resetSelectedOutputName,
-        toolchainErrorMessage: queue.toolchainErrorMessage
+        toolchainErrorMessage: queue.toolchainErrorMessage,
+        isDeveloperModeEnabled: isDeveloperModeEnabled
       )
     }
   }
@@ -357,6 +366,7 @@ private struct EmptyQueueDropZone: View {
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
         .keyboardShortcut("o", modifiers: .command)
+        .help("Add MKV files to the conversion queue.")
       }
       .padding(44)
       .frame(maxWidth: 620)

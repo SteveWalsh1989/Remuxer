@@ -3,26 +3,40 @@ import SwiftUI
 struct QueueListView: View {
   @ObservedObject var queue: ConversionQueue
   @Binding var selectedItemIDs: Set<QueueItem.ID>
+  @Binding var isDeveloperModeEnabled: Bool
 
   var body: some View {
-    List(selection: $selectedItemIDs) {
-      if queue.items.isEmpty == false {
-        Section("Queue") {
-          ForEach(queue.items) { item in
-            QueueSidebarRow(item: item)
-              .tag(item.id)
-              .contextMenu {
-                itemContextMenu(for: item)
-              }
+    VStack(spacing: 0) {
+      List(selection: $selectedItemIDs) {
+        if queue.items.isEmpty == false {
+          Section("Queue") {
+            ForEach(queue.items) { item in
+              QueueSidebarRow(item: item)
+                .tag(item.id)
+                .contextMenu {
+                  itemContextMenu(for: item)
+                }
+            }
           }
         }
       }
-    }
-    .listStyle(.sidebar)
-    .overlay {
-      if queue.items.isEmpty {
-        SidebarEmptyState()
+      .listStyle(.sidebar)
+      .overlay {
+        if queue.items.isEmpty {
+          SidebarEmptyState()
+        }
       }
+
+      Divider()
+
+      Toggle(isOn: $isDeveloperModeEnabled) {
+        Label("Dev Mode", systemImage: "hammer")
+      }
+      .toggleStyle(.switch)
+      .controlSize(.small)
+      .padding(.horizontal, 14)
+      .padding(.vertical, 10)
+      .help("Show FFmpeg commands, logs, and raw file paths for debugging.")
     }
   }
 

@@ -6,7 +6,7 @@ The main product rule is honesty: the app should never silently re-encode video 
 
 ## Current Status
 
-Remuxer currently has a SwiftUI queue interface, conversion planning, output path handling, FFmpeg/ffprobe process wrappers, a bundled FFmpeg runtime, and unit tests for the core non-UI behavior. Remuxer owns conversion end to end: users should not need to install or configure FFmpeg.
+Remuxer currently has a SwiftUI queue interface, conversion planning, output path handling, FFmpeg/ffprobe process wrappers, a bundled FFmpeg runtime, and unit tests for the core non-UI behavior. Normal users see a progress-focused detail view by default; Dev Mode exposes raw file paths, FFmpeg commands, and logs with copy actions for debugging. Remuxer owns conversion end to end: users should not need to install or configure FFmpeg.
 
 ## Prerequisites
 
