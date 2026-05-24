@@ -57,7 +57,6 @@ extension ContentView {
 
       presetMenu
       outputMenu
-      toolchainMenu
 
       Button {
         Task { await queue.analyzeItems(with: selectedItemIDs) }
@@ -106,29 +105,6 @@ extension ContentView {
       .disabled(queue.items.isEmpty || queue.isWorking)
     } label: {
       Label(queue.defaultPreset.displayName, systemImage: "slider.horizontal.3")
-    }
-  }
-
-  private var toolchainMenu: some View {
-    Menu {
-      if let configuredToolDirectoryURL = queue.configuredToolDirectoryURL {
-        Section("Configured Folder") {
-          Text(configuredToolDirectoryURL.path)
-        }
-      } else {
-        Text("No custom folder configured")
-      }
-
-      Button("Choose Runtime Folder...") {
-        presentToolchainFolderPicker()
-      }
-
-      Button("Clear Configured Folder") {
-        queue.clearConfiguredToolchainDirectory()
-      }
-      .disabled(queue.configuredToolDirectoryURL == nil)
-    } label: {
-      Label("FFmpeg", systemImage: toolchainMenuSystemImage)
     }
   }
 
@@ -206,8 +182,7 @@ extension ContentView {
         presetSelection: selectedPresetBinding,
         outputName: selectedOutputNameBinding,
         resetOutputName: resetSelectedOutputName,
-        toolchainErrorMessage: queue.toolchainErrorMessage,
-        chooseToolchainFolder: presentToolchainFolderPicker
+        toolchainErrorMessage: queue.toolchainErrorMessage
       )
     }
   }
@@ -250,10 +225,6 @@ extension ContentView {
     selectedItemIDs.isEmpty ? "Apply Preset to Queue" : "Apply Preset to Selection"
   }
 
-  private var toolchainMenuSystemImage: String {
-    queue.toolchainErrorMessage == nil ? "terminal" : "exclamationmark.triangle"
-  }
-
   private func resetSelectedOutputName() {
     guard let selectedID = selectedDetailItem?.id else {
       return
@@ -294,28 +265,6 @@ extension ContentView {
   }
 
   @MainActor
-  private func presentToolchainFolderPicker() {
-    let panel = NSOpenPanel()
-    panel.title = "Choose FFmpeg Runtime Folder"
-    panel.message = "Choose the folder that contains both ffmpeg and ffprobe."
-    panel.prompt = "Choose"
-    panel.allowsMultipleSelection = false
-    panel.canChooseFiles = false
-    panel.canChooseDirectories = true
-    panel.canCreateDirectories = false
-    panel.resolvesAliases = true
-    panel.directoryURL = queue.configuredToolDirectoryURL ?? defaultToolchainDirectoryURL
-
-    panel.begin { response in
-      guard response == .OK, let folderURL = panel.urls.first else {
-        return
-      }
-
-      queue.chooseToolchainDirectory(folderURL)
-    }
-  }
-
-  @MainActor
   private func presentDestinationFolderPicker() {
     let panel = NSOpenPanel()
     panel.title = "Choose Output Folder"
@@ -343,15 +292,6 @@ extension ContentView {
 
     let url = URL(fileURLWithPath: lastSourceFolderPath)
     return FileManager.default.directoryExists(at: url) ? url : nil
-  }
-
-  private var defaultToolchainDirectoryURL: URL? {
-    ProcessToolLocator.defaultBundledSearchDirectories.first {
-      FileManager.default.directoryExists(at: $0)
-    }
-      ?? ProcessToolLocator.defaultSearchDirectories.first {
-        FileManager.default.directoryExists(at: $0)
-      }
   }
 
   private func rememberSourceFolder(from urls: [URL]) {

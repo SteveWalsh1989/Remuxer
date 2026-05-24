@@ -60,8 +60,8 @@ final class ConversionPlannerTests: XCTestCase {
       outputOptions: OutputOptions()
     )
 
-    XCTAssertTrue(plan.primaryCommand.arguments.contains("libx264"))
-    XCTAssertTrue(plan.primaryCommand.arguments.contains("18"))
+    XCTAssertTrue(plan.primaryCommand.arguments.contains("h264_videotoolbox"))
+    XCTAssertTrue(plan.primaryCommand.arguments.contains("75"))
   }
 
   func testCustomOutputNameAppliesToVideoAndSidecars() throws {

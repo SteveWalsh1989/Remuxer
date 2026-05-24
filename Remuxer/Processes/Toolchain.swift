@@ -9,44 +9,6 @@ protocol ToolLocating {
   func locateToolchain() throws -> FFmpegToolchain
 }
 
-protocol ToolchainManaging: ToolLocating {
-  var configuredDirectoryURL: URL? { get }
-
-  func setConfiguredDirectoryURL(_ url: URL?)
-}
-
-protocol ToolchainConfigurationPersisting {
-  func loadConfiguredDirectoryURL() -> URL?
-  func saveConfiguredDirectoryURL(_ url: URL?)
-}
-
-struct UserDefaultsToolchainConfigurationStore: ToolchainConfigurationPersisting {
-  private enum Key {
-    static let configuredDirectoryPath = "configuredToolchainDirectoryPath"
-  }
-
-  var userDefaults: UserDefaults = .standard
-
-  func loadConfiguredDirectoryURL() -> URL? {
-    guard let path = userDefaults.string(forKey: Key.configuredDirectoryPath),
-      path.isEmpty == false
-    else {
-      return nil
-    }
-
-    return URL(fileURLWithPath: path)
-  }
-
-  func saveConfiguredDirectoryURL(_ url: URL?) {
-    guard let url else {
-      userDefaults.removeObject(forKey: Key.configuredDirectoryPath)
-      return
-    }
-
-    userDefaults.set(url.path, forKey: Key.configuredDirectoryPath)
-  }
-}
-
 enum ToolchainError: LocalizedError, Equatable {
   case missingFFmpeg
   case missingFFprobe
@@ -55,23 +17,21 @@ enum ToolchainError: LocalizedError, Equatable {
     switch self {
     case .missingFFmpeg:
       [
-        "Remuxer's FFmpeg runtime is missing ffmpeg.",
-        "This build needs ffmpeg and ffprobe in the app bundle runtime folder,",
-        "or a configured runtime folder for development.",
+        "Remuxer is missing its bundled conversion engine.",
+        "The app bundle does not contain ffmpeg.",
+        "Use a complete Remuxer build.",
       ].joined(separator: " ")
     case .missingFFprobe:
       [
-        "Remuxer's FFmpeg runtime is missing ffprobe.",
-        "This build needs ffmpeg and ffprobe in the app bundle runtime folder,",
-        "or a configured runtime folder for development.",
+        "Remuxer is missing its bundled media analyzer.",
+        "The app bundle does not contain ffprobe.",
+        "Use a complete Remuxer build.",
       ].joined(separator: " ")
     }
   }
 }
 
-struct ProcessToolLocator: ToolchainManaging {
-  static let defaultSearchDirectories: [URL] = []
-
+struct ProcessToolLocator: ToolLocating {
   static var defaultBundledSearchDirectories: [URL] {
     guard let resourceURL = Bundle.main.resourceURL else {
       return []
@@ -82,26 +42,25 @@ struct ProcessToolLocator: ToolchainManaging {
     ]
   }
 
-  var searchDirectories: [URL]
-  var bundledSearchDirectories: [URL]
-  private let configurationStore: ToolchainConfigurationPersisting
+  static var defaultDeveloperSearchDirectories: [URL] {
+    guard let runtimePath = ProcessInfo.processInfo.environment["REMUXER_FFMPEG_BIN_DIR"],
+      runtimePath.isEmpty == false
+    else {
+      return []
+    }
+
+    return [URL(fileURLWithPath: runtimePath)]
+  }
+
+  private let bundledSearchDirectories: [URL]
+  private let developerSearchDirectories: [URL]
 
   init(
-    searchDirectories: [URL] = Self.defaultSearchDirectories,
     bundledSearchDirectories: [URL] = Self.defaultBundledSearchDirectories,
-    configurationStore: ToolchainConfigurationPersisting = UserDefaultsToolchainConfigurationStore()
+    developerSearchDirectories: [URL] = Self.defaultDeveloperSearchDirectories
   ) {
-    self.searchDirectories = searchDirectories
     self.bundledSearchDirectories = bundledSearchDirectories
-    self.configurationStore = configurationStore
-  }
-
-  var configuredDirectoryURL: URL? {
-    configurationStore.loadConfiguredDirectoryURL()
-  }
-
-  func setConfiguredDirectoryURL(_ url: URL?) {
-    configurationStore.saveConfiguredDirectoryURL(url)
+    self.developerSearchDirectories = developerSearchDirectories
   }
 
   func locateToolchain() throws -> FFmpegToolchain {
@@ -124,12 +83,7 @@ struct ProcessToolLocator: ToolchainManaging {
 
   private var effectiveSearchDirectories: [URL] {
     var directories = bundledSearchDirectories
-
-    if let configuredDirectoryURL {
-      directories.append(configuredDirectoryURL)
-    }
-
-    directories.append(contentsOf: searchDirectories)
+    directories.append(contentsOf: developerSearchDirectories)
     return directories.uniquedByStandardizedFileURL()
   }
 }

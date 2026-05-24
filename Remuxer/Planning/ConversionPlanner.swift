@@ -74,7 +74,7 @@ struct ConversionPlanner: ConversionPlanGenerating {
         outputURL: outputURL,
         subtitlePlan: subtitlePlan,
         outputOptions: outputOptions,
-        videoArguments: ["-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p"]
+        videoArguments: ["-c:v", "h264_videotoolbox", "-q:v", "75", "-pix_fmt", "yuv420p"]
       )
     case .archive:
       return archivePlan(

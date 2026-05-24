@@ -6,22 +6,19 @@ struct PlanDetailView: View {
   let outputName: Binding<String>?
   let resetOutputName: () -> Void
   let toolchainErrorMessage: String?
-  let chooseToolchainFolder: () -> Void
 
   init(
     item: QueueItem?,
     presetSelection: Binding<ConversionPreset>? = nil,
     outputName: Binding<String>? = nil,
     resetOutputName: @escaping () -> Void = {},
-    toolchainErrorMessage: String? = nil,
-    chooseToolchainFolder: @escaping () -> Void = {}
+    toolchainErrorMessage: String? = nil
   ) {
     self.item = item
     self.presetSelection = presetSelection
     self.outputName = outputName
     self.resetOutputName = resetOutputName
     self.toolchainErrorMessage = toolchainErrorMessage
-    self.chooseToolchainFolder = chooseToolchainFolder
   }
 
   var body: some View {
@@ -83,17 +80,11 @@ struct PlanDetailView: View {
   }
 
   private func ffmpegSetupNotice(message: String) -> some View {
-    DetailSection(title: "FFmpeg Setup") {
+    DetailSection(title: "Conversion Engine") {
       Label(message, systemImage: "exclamationmark.triangle")
         .font(.caption)
         .foregroundStyle(.orange)
         .fixedSize(horizontal: false, vertical: true)
-
-      HStack(spacing: 8) {
-        Button("Choose Runtime Folder...") {
-          chooseToolchainFolder()
-        }
-      }
     }
   }
 

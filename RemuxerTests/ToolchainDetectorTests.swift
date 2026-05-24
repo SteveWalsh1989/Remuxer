@@ -4,9 +4,12 @@ import XCTest
 
 final class ToolchainDetectorTests: XCTestCase {
   func testDetectsMissingFFmpegBeforeFFprobe() {
-    let locator = ProcessToolLocator(searchDirectories: [
-      URL(fileURLWithPath: "/definitely-missing")
-    ])
+    let locator = ProcessToolLocator(
+      bundledSearchDirectories: [
+        URL(fileURLWithPath: "/definitely-missing")
+      ],
+      developerSearchDirectories: []
+    )
 
     XCTAssertThrowsError(try locator.locateToolchain()) { error in
       XCTAssertEqual(error as? ToolchainError, .missingFFmpeg)
@@ -28,7 +31,10 @@ final class ToolchainDetectorTests: XCTestCase {
     try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: ffmpegURL.path)
     try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: ffprobeURL.path)
 
-    let locator = ProcessToolLocator(searchDirectories: [folderURL])
+    let locator = ProcessToolLocator(
+      bundledSearchDirectories: [folderURL],
+      developerSearchDirectories: []
+    )
 
     XCTAssertEqual(
       try locator.locateToolchain(),
@@ -36,17 +42,13 @@ final class ToolchainDetectorTests: XCTestCase {
     )
   }
 
-  func testSearchesBundledRuntimeBeforeConfiguredAndDefaultDirectories() throws {
+  func testSearchesBundledRuntimeBeforeDeveloperRuntime() throws {
     let bundledFolderURL = try makeExecutableToolDirectory()
-    let configuredFolderURL = try makeExecutableToolDirectory()
-    let fallbackFolderURL = try makeExecutableToolDirectory()
-    let configurationStore = FakeToolchainConfigurationStore(
-      configuredDirectoryURL: configuredFolderURL)
+    let developerFolderURL = try makeExecutableToolDirectory()
 
     let locator = ProcessToolLocator(
-      searchDirectories: [fallbackFolderURL],
       bundledSearchDirectories: [bundledFolderURL],
-      configurationStore: configurationStore
+      developerSearchDirectories: [developerFolderURL]
     )
 
     XCTAssertEqual(
@@ -58,39 +60,21 @@ final class ToolchainDetectorTests: XCTestCase {
     )
   }
 
-  func testSearchesConfiguredDirectoryBeforeDefaultDirectories() throws {
-    let configuredFolderURL = try makeExecutableToolDirectory()
-    let fallbackFolderURL = try makeExecutableToolDirectory()
-    let configurationStore = FakeToolchainConfigurationStore(
-      configuredDirectoryURL: configuredFolderURL)
+  func testSearchesDeveloperRuntimeWhenBundledRuntimeIsMissing() throws {
+    let developerFolderURL = try makeExecutableToolDirectory()
 
     let locator = ProcessToolLocator(
-      searchDirectories: [fallbackFolderURL],
       bundledSearchDirectories: [],
-      configurationStore: configurationStore
+      developerSearchDirectories: [developerFolderURL]
     )
 
     XCTAssertEqual(
       try locator.locateToolchain(),
       FFmpegToolchain(
-        ffmpegURL: configuredFolderURL.appendingPathComponent("ffmpeg"),
-        ffprobeURL: configuredFolderURL.appendingPathComponent("ffprobe")
+        ffmpegURL: developerFolderURL.appendingPathComponent("ffmpeg"),
+        ffprobeURL: developerFolderURL.appendingPathComponent("ffprobe")
       )
     )
-  }
-
-  func testPersistsConfiguredDirectory() {
-    let configurationStore = FakeToolchainConfigurationStore()
-    let locator = ProcessToolLocator(configurationStore: configurationStore)
-    let folderURL = URL(fileURLWithPath: "/Tools/ffmpeg")
-
-    locator.setConfiguredDirectoryURL(folderURL)
-
-    XCTAssertEqual(locator.configuredDirectoryURL, folderURL)
-
-    locator.setConfiguredDirectoryURL(nil)
-
-    XCTAssertNil(locator.configuredDirectoryURL)
   }
 
   private func makeExecutableToolDirectory() throws -> URL {
@@ -109,21 +93,5 @@ final class ToolchainDetectorTests: XCTestCase {
     try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: ffprobeURL.path)
 
     return folderURL
-  }
-}
-
-private final class FakeToolchainConfigurationStore: ToolchainConfigurationPersisting {
-  private var configuredDirectoryURL: URL?
-
-  init(configuredDirectoryURL: URL? = nil) {
-    self.configuredDirectoryURL = configuredDirectoryURL
-  }
-
-  func loadConfiguredDirectoryURL() -> URL? {
-    configuredDirectoryURL
-  }
-
-  func saveConfiguredDirectoryURL(_ url: URL?) {
-    configuredDirectoryURL = url
   }
 }
