@@ -11,13 +11,14 @@ final class ConversionQueue: ObservableObject {
   }
   @Published private(set) var isWorking = false
   @Published private(set) var toolchainErrorMessage: String?
+  @Published private(set) var configuredToolDirectoryURL: URL?
   @Published private(set) var recentDestinationURLs: [URL] = []
   @Published private(set) var savedDestinationURLs: [URL] = []
 
   private let analyzer: MediaAnalyzing
   private let planner: ConversionPlanGenerating
   private let executor: ConversionExecuting
-  private let toolLocator: ToolLocating
+  private let toolLocator: ToolchainManaging
   private let destinationStore: DestinationPersisting
   private let outputPreparer: OutputPreparing
   private let resourceAccess: SecurityScopedResourceAccessing
@@ -27,7 +28,7 @@ final class ConversionQueue: ObservableObject {
     analyzer: MediaAnalyzing,
     planner: ConversionPlanGenerating,
     executor: ConversionExecuting,
-    toolLocator: ToolLocating,
+    toolLocator: ToolchainManaging,
     destinationStore: DestinationPersisting = UserDefaultsDestinationStore(),
     outputPreparer: OutputPreparing = OutputPreparer(),
     resourceAccess: SecurityScopedResourceAccessing = SecurityScopedResourceAccess()
@@ -39,6 +40,7 @@ final class ConversionQueue: ObservableObject {
     self.destinationStore = destinationStore
     self.outputPreparer = outputPreparer
     self.resourceAccess = resourceAccess
+    configuredToolDirectoryURL = toolLocator.configuredDirectoryURL
     recentDestinationURLs = destinationStore.loadRecentDestinations()
     savedDestinationURLs = destinationStore.loadSavedDestinations()
   }
@@ -379,6 +381,27 @@ extension URL {
 }
 
 extension ConversionQueue {
+  func chooseToolchainDirectory(_ url: URL) {
+    toolLocator.setConfiguredDirectoryURL(url)
+    configuredToolDirectoryURL = url
+    refreshToolchainStatus()
+  }
+
+  func clearConfiguredToolchainDirectory() {
+    toolLocator.setConfiguredDirectoryURL(nil)
+    configuredToolDirectoryURL = nil
+    refreshToolchainStatus()
+  }
+
+  func refreshToolchainStatus() {
+    do {
+      _ = try toolLocator.locateToolchain()
+      toolchainErrorMessage = nil
+    } catch {
+      toolchainErrorMessage = error.localizedDescription
+    }
+  }
+
   var canSaveSelectedDestination: Bool {
     guard outputOptions.locationMode != .besideSource else {
       return false

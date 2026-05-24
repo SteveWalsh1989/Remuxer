@@ -5,6 +5,8 @@ import UniformTypeIdentifiers
 struct ContentView: View {
   @ObservedObject var queue: ConversionQueue
 
+  @AppStorage("lastSourceFolderPath") private var lastSourceFolderPath = ""
+
   @State private var selectedItemIDs: Set<QueueItem.ID> = []
   @State private var isDropTargeted = false
 
@@ -37,7 +39,9 @@ struct ContentView: View {
       addSourceFiles([url])
     }
   }
+}
 
+extension ContentView {
   @ToolbarContentBuilder
   private var toolbarContent: some ToolbarContent {
     ToolbarItemGroup {
@@ -53,6 +57,7 @@ struct ContentView: View {
 
       presetMenu
       outputMenu
+      toolchainMenu
 
       Button {
         Task { await queue.analyzeItems(with: selectedItemIDs) }
@@ -101,6 +106,33 @@ struct ContentView: View {
       .disabled(queue.items.isEmpty || queue.isWorking)
     } label: {
       Label(queue.defaultPreset.displayName, systemImage: "slider.horizontal.3")
+    }
+  }
+
+  private var toolchainMenu: some View {
+    Menu {
+      if let configuredToolDirectoryURL = queue.configuredToolDirectoryURL {
+        Section("Configured Folder") {
+          Text(configuredToolDirectoryURL.path)
+        }
+      } else {
+        Text("No custom folder configured")
+      }
+
+      Button("Choose FFmpeg Folder...") {
+        presentToolchainFolderPicker()
+      }
+
+      Button("Copy Homebrew Install Command") {
+        copyHomebrewInstallCommand()
+      }
+
+      Button("Clear Configured Folder") {
+        queue.clearConfiguredToolchainDirectory()
+      }
+      .disabled(queue.configuredToolDirectoryURL == nil)
+    } label: {
+      Label("FFmpeg", systemImage: toolchainMenuSystemImage)
     }
   }
 
@@ -177,7 +209,10 @@ struct ContentView: View {
         item: selectedDetailItem,
         presetSelection: selectedPresetBinding,
         outputName: selectedOutputNameBinding,
-        resetOutputName: resetSelectedOutputName
+        resetOutputName: resetSelectedOutputName,
+        toolchainErrorMessage: queue.toolchainErrorMessage,
+        chooseToolchainFolder: presentToolchainFolderPicker,
+        copyHomebrewInstallCommand: copyHomebrewInstallCommand
       )
     }
   }
@@ -220,6 +255,10 @@ struct ContentView: View {
     selectedItemIDs.isEmpty ? "Apply Preset to Queue" : "Apply Preset to Selection"
   }
 
+  private var toolchainMenuSystemImage: String {
+    queue.toolchainErrorMessage == nil ? "terminal" : "exclamationmark.triangle"
+  }
+
   private func resetSelectedOutputName() {
     guard let selectedID = selectedDetailItem?.id else {
       return
@@ -229,6 +268,7 @@ struct ContentView: View {
   }
 
   private func addSourceFiles(_ urls: [URL]) {
+    rememberSourceFolder(from: urls.filter(SupportedInputFile.isSupported))
     queue.addFiles(urls)
 
     if selectedItemIDs.isEmpty, let firstItemID = queue.items.first?.id {
@@ -247,6 +287,7 @@ struct ContentView: View {
     panel.canChooseFiles = true
     panel.canChooseDirectories = false
     panel.resolvesAliases = true
+    panel.directoryURL = rememberedSourceFolderURL
 
     panel.begin { response in
       guard response == .OK else {
@@ -254,6 +295,28 @@ struct ContentView: View {
       }
 
       addSourceFiles(panel.urls)
+    }
+  }
+
+  @MainActor
+  private func presentToolchainFolderPicker() {
+    let panel = NSOpenPanel()
+    panel.title = "Choose FFmpeg Folder"
+    panel.message = "Choose the folder that contains both ffmpeg and ffprobe."
+    panel.prompt = "Choose"
+    panel.allowsMultipleSelection = false
+    panel.canChooseFiles = false
+    panel.canChooseDirectories = true
+    panel.canCreateDirectories = false
+    panel.resolvesAliases = true
+    panel.directoryURL = queue.configuredToolDirectoryURL ?? defaultToolchainDirectoryURL
+
+    panel.begin { response in
+      guard response == .OK, let folderURL = panel.urls.first else {
+        return
+      }
+
+      queue.chooseToolchainDirectory(folderURL)
     }
   }
 
@@ -276,6 +339,34 @@ struct ContentView: View {
 
       queue.chooseDestinationFolder(folderURL)
     }
+  }
+
+  private var rememberedSourceFolderURL: URL? {
+    guard lastSourceFolderPath.isEmpty == false else {
+      return nil
+    }
+
+    let url = URL(fileURLWithPath: lastSourceFolderPath)
+    return FileManager.default.directoryExists(at: url) ? url : nil
+  }
+
+  private var defaultToolchainDirectoryURL: URL? {
+    ProcessToolLocator.defaultSearchDirectories.first {
+      FileManager.default.directoryExists(at: $0)
+    }
+  }
+
+  private func rememberSourceFolder(from urls: [URL]) {
+    guard let sourceFolderURL = urls.first?.deletingLastPathComponent() else {
+      return
+    }
+
+    lastSourceFolderPath = sourceFolderURL.path
+  }
+
+  private func copyHomebrewInstallCommand() {
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString("brew install ffmpeg", forType: .string)
   }
 
   private func openDroppedFiles(_ providers: [NSItemProvider]) -> Bool {
@@ -384,4 +475,12 @@ private func droppedURL(from item: NSSecureCoding?) -> URL? {
   }
 
   return nil
+}
+
+extension FileManager {
+  fileprivate func directoryExists(at url: URL) -> Bool {
+    var isDirectory: ObjCBool = false
+    let exists = fileExists(atPath: url.path, isDirectory: &isDirectory)
+    return exists && isDirectory.boolValue
+  }
 }

@@ -91,6 +91,31 @@ final class ConversionQueueTests: XCTestCase {
     XCTAssertEqual(queue.items.first?.plan?.output.videoURL.lastPathComponent, "Movie Export.mp4")
   }
 
+  func testToolchainDirectoryConfigurationUpdatesLocator() {
+    let toolLocator = FakeToolLocator()
+    let queue = makeQueue(toolLocator: toolLocator)
+    let toolDirectoryURL = URL(fileURLWithPath: "/Tools/ffmpeg")
+
+    queue.chooseToolchainDirectory(toolDirectoryURL)
+
+    XCTAssertEqual(queue.configuredToolDirectoryURL, toolDirectoryURL)
+    XCTAssertEqual(toolLocator.configuredDirectoryURL, toolDirectoryURL)
+
+    queue.clearConfiguredToolchainDirectory()
+
+    XCTAssertNil(queue.configuredToolDirectoryURL)
+    XCTAssertNil(toolLocator.configuredDirectoryURL)
+  }
+
+  func testToolchainDirectoryConfigurationRefreshesSetupError() {
+    let toolLocator = FakeToolLocator(result: .failure(.missingFFmpeg))
+    let queue = makeQueue(toolLocator: toolLocator)
+
+    queue.chooseToolchainDirectory(URL(fileURLWithPath: "/Missing"))
+
+    XCTAssertEqual(queue.toolchainErrorMessage, ToolchainError.missingFFmpeg.localizedDescription)
+  }
+
   private func makeQueue(
     executor: FakeExecutor? = nil,
     toolLocator: FakeToolLocator = FakeToolLocator(),
@@ -178,13 +203,29 @@ private final class FakeExecutor: ConversionExecuting {
   func cancel() {}
 }
 
-private struct FakeToolLocator: ToolLocating {
+private final class FakeToolLocator: ToolchainManaging {
   var result: Result<FFmpegToolchain, ToolchainError> = .success(
     FFmpegToolchain(
       ffmpegURL: URL(fileURLWithPath: "/usr/local/bin/ffmpeg"),
       ffprobeURL: URL(fileURLWithPath: "/usr/local/bin/ffprobe")
     )
   )
+  private(set) var configuredDirectoryURL: URL?
+
+  init(
+    result: Result<FFmpegToolchain, ToolchainError> = .success(
+      FFmpegToolchain(
+        ffmpegURL: URL(fileURLWithPath: "/usr/local/bin/ffmpeg"),
+        ffprobeURL: URL(fileURLWithPath: "/usr/local/bin/ffprobe")
+      )
+    )
+  ) {
+    self.result = result
+  }
+
+  func setConfiguredDirectoryURL(_ url: URL?) {
+    configuredDirectoryURL = url
+  }
 
   func locateToolchain() throws -> FFmpegToolchain {
     try result.get()

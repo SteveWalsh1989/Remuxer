@@ -5,22 +5,35 @@ struct PlanDetailView: View {
   let presetSelection: Binding<ConversionPreset>?
   let outputName: Binding<String>?
   let resetOutputName: () -> Void
+  let toolchainErrorMessage: String?
+  let chooseToolchainFolder: () -> Void
+  let copyHomebrewInstallCommand: () -> Void
 
   init(
     item: QueueItem?,
     presetSelection: Binding<ConversionPreset>? = nil,
     outputName: Binding<String>? = nil,
-    resetOutputName: @escaping () -> Void = {}
+    resetOutputName: @escaping () -> Void = {},
+    toolchainErrorMessage: String? = nil,
+    chooseToolchainFolder: @escaping () -> Void = {},
+    copyHomebrewInstallCommand: @escaping () -> Void = {}
   ) {
     self.item = item
     self.presetSelection = presetSelection
     self.outputName = outputName
     self.resetOutputName = resetOutputName
+    self.toolchainErrorMessage = toolchainErrorMessage
+    self.chooseToolchainFolder = chooseToolchainFolder
+    self.copyHomebrewInstallCommand = copyHomebrewInstallCommand
   }
 
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 18) {
+        if let toolchainErrorMessage {
+          ffmpegSetupNotice(message: toolchainErrorMessage)
+        }
+
         if let item {
           selectedFileHeader(item)
           itemOptions(item)
@@ -70,6 +83,25 @@ struct PlanDetailView: View {
     }
     .padding(18)
     .remuxerGlassPanel(cornerRadius: 18)
+  }
+
+  private func ffmpegSetupNotice(message: String) -> some View {
+    DetailSection(title: "FFmpeg Setup") {
+      Label(message, systemImage: "exclamationmark.triangle")
+        .font(.caption)
+        .foregroundStyle(.orange)
+        .fixedSize(horizontal: false, vertical: true)
+
+      HStack(spacing: 8) {
+        Button("Choose FFmpeg Folder...") {
+          chooseToolchainFolder()
+        }
+
+        Button("Copy Homebrew Install Command") {
+          copyHomebrewInstallCommand()
+        }
+      }
+    }
   }
 
   @ViewBuilder
