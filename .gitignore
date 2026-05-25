@@ -18,8 +18,9 @@ build/
 dist/
 *.app.dSYM/
 
-# Local planning notes
-docs/planning/
+# Local repo instructions and docs
+AGENTS.md
+docs/
 
 # Local environment overrides
 .env
