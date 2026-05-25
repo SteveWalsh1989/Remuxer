@@ -4,7 +4,7 @@ This document describes the app behavior implemented in the current codebase. Ke
 
 ## User Workflow
 
-- Remuxer accepts `.mkv` and `.mp4` files through drag and drop, the Add Video Files panel, and app-opened file URLs. MP4 input support is for remux repair, including files that need Apple-compatible tagging.
+- Remuxer presents `.mkv` as the primary input type in the empty state, toolbar help, and Add Video Files panel. The underlying input handling also accepts `.mp4` files as a repair path for remuxes that need Apple-compatible tagging.
 - The queue ignores unsupported file extensions and duplicate source URLs already in the queue.
 - Users can analyze queued files before conversion or press Start and let the queue analyze missing plans first.
 - Queue rows show file name, selected preset, status, inline progress during conversion, and blocking issues.
@@ -58,7 +58,7 @@ This document describes the app behavior implemented in the current codebase. Ke
 
 ## Current Constraints
 
-- Remuxer only accepts `.mkv` and `.mp4` input files. MP4 input support is scoped to remux repair, not general video editing.
+- Remuxer only accepts `.mkv` and `.mp4` input files. The UI presents `.mkv` as the normal path; MP4 input support is scoped to remux repair, not general video editing.
 - MP4 is a compatibility container and cannot preserve every MKV feature.
 - The app is intentionally not app-sandboxed in the current build. Security-scoped access is isolated behind a helper, but durable bookmarks and App Store sandbox behavior remain future production concerns.
 - Remuxer does not silently re-encode video or audio in the `Lossless MP4` preset. Other MP4 presets intentionally transcode video and may transcode incompatible audio with warnings.
