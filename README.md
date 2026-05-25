@@ -1,6 +1,6 @@
 # Remuxer
 
-Remuxer is a native macOS app for converting `.mkv` files to like mp4 so you can play on Quicktime Player or other Mac apps 
+Remuxer is a native macOS app for converting `.mkv` files to `.mp4` so you can play on Quicktime Player or other Mac apps 
 
 It focuses on clear queue management and honest conversion plans, so users can see what will be copied, converted, extracted, blocked, or left out before work starts.
 
